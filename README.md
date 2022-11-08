@@ -1,92 +1,49 @@
 # SimulationCW
 
+Backend.Function-as-a-Service (FaaS) plaform simulation.
+When a new request for a serverless function arrives, if the contianer is not present in memory the request will be blocked until the container is loaded, introducing an overhead on the request response tim ecalled the cold start time. Instead, if the container is present in memory and can accept the incoming request, the cold start time will not be incurred. Note that the incoming request may be rejected, even though the contined is present in memory.
 
+## Simulation Model
 
-## Getting started
+$\lambda _{f}$ : the arrival rate of requests to function f (requests / second ). Assume that inter arrival times for each function are exponentially distributed; hence, the arrival process to each function is a Poisson process
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+$\alpha = 0.5$ : cold-start overhead parameter (in seconds^-1). As the cold start time depends on vairous factors (machine lod, image size, network bandoidth if the container is retrieved from remote, ...) you should assume that a request for a function f, when it incurs a cold start, suffers an exponentially distributed overhead with mean 1 / alpha before being loaded in memory. Thus, for alpha = 0.5 the average cold start overhead is 2 seconds.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+$m _{f}$ : the memory occupation of a loaded function f. Assume this to be identical for all functions and equal to 100 MB.
 
-## Add your files
+## Assumptions:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- A0. At time t = 0, no function is in memory.
+- A1. If a request arrives for a function f and there is not enough spare memory to load
+it, the function g that is already loaded in memory and has been idle the longest is
+instantaneously deallocated and its memory space immediately allocated to f. If no
+function is idle, the incoming request to f is lost.
+- A2. If a request for function f is received while that function is serving another request, then
+the incoming request is lost.
+- A3. During the cold start period for function f, incoming requests to f other than the one
+that triggered the cold start are lost. The request that triggered the cold start can begin
+service only after the cold start period ends.
+- A4. A function f cannot be deallocated from memory during its cold start. The earliest time
+at which it can be deallocated is right after it serves the first job, if f is idle then.
+- A5. The CPU capacity is over-provisioned and contention is negligible, so that any request
+to function f either (i) receives its intended service time, (ii) receives the service time
+plus the cold start time, or (iii) it is lost, based on the rules given above.
+- A6. The total memory available is initially 4 gigabytes, i.e. there is capacity for M = 40
+functions in memory at any time. To simplify the simulation you are advised to start
+the FaaS with the first M functions in memory in the idle state and the remainder in the
+unloaded (not in memory) state – this means that there will be precisely M functions
+in memory at all times, so you will not have to model unused memory that has yet to
+be loaded/initialised.
 
-```
-cd existing_repo
-git remote add origin https://gitlab.doc.ic.ac.uk/az620/simulationcw.git
-git branch -M master
-git push -uf origin master
-```
+## Files
 
-## Integrate with your tools
+/trace-final.csv : real-world serverless dataset tracing F = 10862 functions. For each function f, 1 <= f <= F, the dataset includes:
 
-- [ ] [Set up project integrations](https://gitlab.doc.ic.ac.uk/az620/simulationcw/-/settings/integrations)
+- the total number of requests that arrived to each function in the observation period of T = 30 days
+- the mean service times $S _{f}$ of the functions (in milliseconds, rounded up).
 
-## Collaborate with your team
+The total number of request invocations allows you to estimate the arrival rate $\lambda _{f}$ for each function. For the purposes of the model you should assume that the service times for function f are exponentially distributed with rate parameter 1 / S_f (i.e. mean S_f) 
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Author(s)
 
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+az620 - Anton Zhitomirsky
