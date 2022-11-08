@@ -78,9 +78,15 @@ public class IdleFunctionsTest {
   public void removingElementManuallyUpdatesTheTop() throws IdleFunctionException {
     idleFunctions.add(1234);
     idleFunctions.add(282);
+    idleFunctions.add(82346);
     assertTrue(idleFunctions.remove(1234));
     assertEquals(282, idleFunctions.peekOldest());
-    idleFunctions.add(1234);
+    idleFunctions.add(1234); // 282, 82346, 1234
     assertEquals(282, idleFunctions.peekOldest());
+    assertTrue(idleFunctions.remove(82346));
+    assertEquals(282, idleFunctions.peekOldest());
+    assertEquals(2, idleFunctions.size());
+    assertEquals(282, idleFunctions.pollOldest());
+    assertEquals(1234, idleFunctions.pollOldest());
   }
 }

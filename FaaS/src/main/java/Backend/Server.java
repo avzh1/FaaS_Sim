@@ -26,7 +26,7 @@ public class Server {
     this.lambda_f = lambda_f;
 
     // from A0, no function is in memory
-    activeFunctions = new HashSet<Integer>(m);
+    activeFunctions = new HashSet<>(m);
     idleFunctions = new IdleFunctions(m);
   }
 
