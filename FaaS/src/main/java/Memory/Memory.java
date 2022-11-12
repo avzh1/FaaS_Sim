@@ -1,24 +1,20 @@
 package Memory;
 
-import static FunctionAsAService.Service.newActiveService;
-import static FunctionAsAService.Service.newLoadingService;
-import static FunctionAsAService.Service.newUnreservedService;
 import static Memory.MemoryException.MEMORY_BUSY;
 import static Memory.MemoryException.MEMORY_CLASH;
 import static Memory.MemoryException.MEMORY_MISSING;
 import static Memory.MemoryException.MEMORY_OVERFLOW;
-import static Memory.Status.IDLE;
 
 import FunctionAsAService.Function;
-import FunctionAsAService.Service;
-import FunctionAsAService.ServiceException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Memory {
 
-  Map<Integer, Service> memory = new HashMap<>();
-  IdleQueue idleFunctions = new IdleQueue();
+  Map<Integer, Function> active = new HashMap<Integer, Function>();
+  Map<Integer, Function> loading = new HashMap<Integer, Function>();
+  QueueMap<Integer, Function> idle = new QueueMap<Integer, Function>();
+
   private final int maximumCapacity;
 
   /**
@@ -32,52 +28,52 @@ public class Memory {
    * @return size of the memory
    */
   public int size() {
-    return memory.size() + idleFunctions.size();
+    return active.size() + idle.size() + loading.size();
   }
 
   /**
-   * Adds a new Service for a function with status set to Active
+   * Adds a new Function to the unordered collection of Active Services
    *
    * @throws MemoryException if the memory already contains the function in memory or the maximum
    *                         capacity is exceeded
    */
   public void enqueueActive(Function function) throws MemoryException {
     canAddToMemory(function);
-    memory.put(function.getFunctionID(), newActiveService(function));
+    active.put(function.getFunctionID(), function);
   }
 
   /**
-   * Adds a new Service for a function with status set to Idle
+   * Adds a new Function to the ordered collection of Idle Services
    *
    * @throws MemoryException if the memory already contains the function in memory or the maximum
    *                         capacity is exceeded
    */
   public void enqueueIdle(Function function) throws MemoryException {
     canAddToMemory(function);
-    idleFunctions.add(function);
+    idle.put(function.getFunctionID(), function);
   }
 
   /**
-   * Adds a new Service for a function with status set to Loading
+   * Adds a new Function to the unordered collection of Loading Services
    *
    * @throws MemoryException if the memory already contains the function in memory or the maximum
    *                         capacity is exceeded
    */
   public void enqueueLoading(Function function) throws MemoryException {
     canAddToMemory(function);
-    memory.put(function.getFunctionID(), newLoadingService(function));
+    loading.put(function.getFunctionID(), function);
   }
 
   public boolean isActive(int functionID) {
-    return memory.getOrDefault(functionID, newUnreservedService()).getStatus() == Status.ACTIVE;
+    return active.containsKey(functionID);
   }
 
   public boolean isIdle(int functionID) {
-    return idleFunctions.contains(functionID);
+    return idle.containsKey(functionID);
   }
 
   public boolean isLoading(int functionID) {
-    return memory.getOrDefault(functionID, newUnreservedService()).getStatus() == Status.LOADING;
+    return loading.containsKey(functionID);
   }
 
   public boolean isUnreserved(int functionID) {
@@ -85,28 +81,26 @@ public class Memory {
   }
 
   /**
-   * Promotes a function one level up in memory as specified in Service.promote()
+   * Promotes the function to the next level of Status.
+   * <p>
+   * Loading -> Active
+   * <p>
+   * Idle -> Active
    */
-  public void promote(Function function) throws MemoryException, ServiceException {
+  public void promote(Function function) throws MemoryException {
     // does this service exist in memory?
     if (isUnreserved(function.getFunctionID())) {
       throw MEMORY_MISSING;
     }
 
-    Service service;
-    if (isIdle(function.getFunctionID())) {
-      // move function out from the queue of idle services
-      service = new Service(idleFunctions.remove(function.getFunctionID()), IDLE, 0);
-    } else {
-      // it is loading
-      service = memory.get(function.getFunctionID());
-      assert (function == service.getFunction());
+    if (isLoading(function.getFunctionID())) {
+      // move to active list
+      active.put(function.getFunctionID(), loading.remove(function.getFunctionID()));
     }
 
-    service.promote();
-    if (service.getStatus() != IDLE) {
-      // replace the function id with a new Service reference
-      memory.put(service.getFunctionID(), service);
+    if (isIdle(function.getFunctionID())) {
+      // move to active list
+      active.put(function.getFunctionID(), idle.remove(function.getFunctionID()));
     }
   }
 
@@ -114,15 +108,18 @@ public class Memory {
     if (size() >= maximumCapacity) {
       throw MEMORY_OVERFLOW;
     }
-    if (memory.containsKey(function.getFunctionID())) {
+    if (!isUnreserved(function.getFunctionID())) {
       throw MEMORY_CLASH;
     }
   }
 
-
+  /**
+   * In the event that memory is full
+   *
+   * @return true if there is a service we can replace, false otherwise
+   */
   public boolean canEvict() {
-    // can evict if at least one idle
-    return idleFunctions.size() != 0;
+    return idle.size() > 0;
   }
 
   public Function evict() throws MemoryException {
@@ -130,6 +127,6 @@ public class Memory {
       throw MEMORY_BUSY;
     }
     // evict the oldest idle service
-    return idleFunctions.pop();
+    return idle.pop();
   }
 }
