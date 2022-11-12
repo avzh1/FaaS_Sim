@@ -1,4 +1,4 @@
-package Backend;
+package Backend.Server;
 
 // Exception class for SeverBuilder function shenanigans. This case shouldn't be hit but is good
 // as a sanity check during development.

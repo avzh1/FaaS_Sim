@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import Backend.Server.IdleFunctionException;
+import Backend.Server.IdleFunctions;
 import org.junit.Test;
 
 public class IdleFunctionsTest {

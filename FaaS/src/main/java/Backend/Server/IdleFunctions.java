@@ -1,5 +1,6 @@
-package Backend;
+package Backend.Server;
 
+import Backend.Function.Function;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
@@ -16,10 +17,6 @@ public class IdleFunctions {
     int funcDiff = arr1[1] - arr2[1];
     return funcDiff == 0 ? arr1[0] - arr2[0] : funcDiff;
   });
-
-  // can be thought of a pseudo 'time stamp', the smaller the number, the earlier the function
-  // was marked as idle.
-  private static int order = 0;
 
   // Datastructures used to sort and store functions
   private final TreeSet<int[]> idleFunctionOrder;
@@ -52,7 +49,7 @@ public class IdleFunctions {
       throw new IdleFunctionException("Cannot add back a function if it is already idle");
     }
     // add function to tree set (for ordering on idle length). - O(log n)
-    idleFunctionOrder.add(new int[]{functionIdentifier, order++});
+//    idleFunctionOrder.add(new int[]{functionIdentifier, order++});
   }
 
   public boolean remove(int functionIdentifier) throws IdleFunctionException {
@@ -82,6 +79,26 @@ public class IdleFunctions {
       throw new IdleFunctionException("Cannot peak idle function - no functions idle");
     }
     return Objects.requireNonNull(idleFunctionOrder.pollFirst())[0];
+  }
+
+  private static class IdleHistory
+  {
+    // can be thought of a pseudo 'time stamp', the smaller the number, the earlier the function
+    // was marked as idle.
+    private static int order = 0;
+    public final Function function;
+    public final int idleOrder;
+
+    private IdleHistory(Function function, int idleOrder)
+    {
+      this.function = function;
+      this.idleOrder = idleOrder;
+    }
+
+    public static IdleHistory becomesIdle(Function function)
+    {
+      return new IdleHistory(function, order++);
+    }
   }
 }
 

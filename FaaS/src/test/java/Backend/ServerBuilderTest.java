@@ -1,8 +1,10 @@
 package Backend;
 
-import static Backend.ServerBuilder.makeServerBuilder;
+import static Backend.Server.ServerBuilder.makeServerBuilder;
 import static junit.framework.TestCase.assertEquals;
 
+import Backend.Server.Server;
+import Backend.Server.ServerBuilderException;
 import org.junit.Test;
 
 public class ServerBuilderTest {
