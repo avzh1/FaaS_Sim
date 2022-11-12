@@ -1,6 +1,7 @@
 package FunctionAsAService;
 
 public class Function {
+  private static final int Mf = 1; // 100 MB
 
   /* Metadata from CSV */
   private final int FunctionID;
@@ -8,16 +9,21 @@ public class Function {
   private final int Invocations30Days;
 
   /* Arrival of requests for this function */
-  private double lambda_f;
+  private final double lambda_f;
 
 
   public Function(int functionID, int avgServiceTimeMilliseconds, int invocations30Days) {
     FunctionID = functionID;
     AvgServiceTimeMilliseconds = avgServiceTimeMilliseconds;
     Invocations30Days = invocations30Days;
-    this.lambda_f = calculateLambda();
+    lambda_f = calculateLambda();
   }
 
+  /**
+   * Assumes that inter-arrival times for each function are exponentially distributed
+   *
+   * @return arrival rate of requests to function f (requests/second).
+   */
   private double calculateLambda() {
     return 0;
   }
@@ -36,5 +42,16 @@ public class Function {
 
   public double getLambda_f() {
     return lambda_f;
+  }
+
+  public int getMf() {
+    return Mf;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("ID: ").append(getFunctionID());
+    return sb.toString();
   }
 }
