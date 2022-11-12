@@ -1,12 +1,12 @@
 package Memory;
 
+import static FunctionAsAService.Service.newActiveService;
+import static FunctionAsAService.Service.newLoadingService;
+import static FunctionAsAService.Service.newUnreservedService;
 import static Memory.MemoryException.MEMORY_CLASH;
 import static Memory.MemoryException.MEMORY_MISSING;
 import static Memory.MemoryException.MEMORY_OVERFLOW;
-import static FunctionAsAService.Service.newActiveService;
-import static FunctionAsAService.Service.newIdleService;
-import static FunctionAsAService.Service.newLoadingService;
-import static FunctionAsAService.Service.newUnreservedService;
+import static Memory.Status.IDLE;
 
 import FunctionAsAService.Function;
 import FunctionAsAService.Service;
@@ -17,6 +17,7 @@ import java.util.Map;
 public class Memory {
 
   Map<Integer, Service> memory = new HashMap<>();
+  IdleQueue idleFunctions = new IdleQueue();
   private final int maximumCapacity;
 
   /**
@@ -30,7 +31,7 @@ public class Memory {
    * @return size of the memory
    */
   public int size() {
-    return memory.size();
+    return memory.size() + idleFunctions.size();
   }
 
   /**
@@ -52,7 +53,7 @@ public class Memory {
    */
   public void enqueueIdle(Function function) throws MemoryException {
     canAddToMemory(function);
-    memory.put(function.getFunctionID(), newIdleService(function));
+    idleFunctions.add(function);
   }
 
   /**
@@ -71,7 +72,7 @@ public class Memory {
   }
 
   public boolean isIdle(int functionID) {
-    return memory.getOrDefault(functionID, newUnreservedService()).getStatus() == Status.IDLE;
+    return idleFunctions.contains(functionID);
   }
 
   public boolean isLoading(int functionID) {
@@ -90,7 +91,22 @@ public class Memory {
     if (isUnreserved(function.getFunctionID())) {
       throw MEMORY_MISSING;
     }
-    memory.get(function.getFunctionID()).promote();
+
+    Service service;
+    if (isIdle(function.getFunctionID())) {
+      // move function out from the queue of idle services
+      service = new Service(idleFunctions.remove(function.getFunctionID()), IDLE, 0);
+    } else {
+      // it is loading
+      service = memory.get(function.getFunctionID());
+      assert (function == service.getFunction());
+    }
+
+    service.promote();
+    if (service.getStatus() != IDLE) {
+      // replace the function id with a new Service reference
+      memory.put(service.getFunctionID(), service);
+    }
   }
 
   private void canAddToMemory(Function function) throws MemoryException {

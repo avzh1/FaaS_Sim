@@ -35,10 +35,24 @@ public class MemoryTest {
   }
 
   @Test
-  public void isActiveCanIdentifyFunctionsThatAreInActive() throws MemoryException {
+  public void isActiveCanIdentifyFunctionsThatAreInactive() throws MemoryException {
     memory.enqueueActive(DUMMY_FUNCTION1);
     assertTrue(memory.isActive(DUMMY_FUNCTION1.getFunctionID()));
     assertFalse(memory.isActive(DUMMY_FUNCTION2.getFunctionID()));
+  }
+
+  @Test
+  public void isIdleCanIdentifyFunctionsThatAreIdle() throws MemoryException {
+    memory.enqueueIdle(DUMMY_FUNCTION1);
+    assertTrue(memory.isIdle(DUMMY_FUNCTION1.getFunctionID()));
+    assertFalse(memory.isIdle(DUMMY_FUNCTION2.getFunctionID()));
+  }
+
+  @Test
+  public void isLoadingCanIdentifyFunctionsThatAreLoading() throws MemoryException {
+    memory.enqueueLoading(DUMMY_FUNCTION1);
+    assertTrue(memory.isLoading(DUMMY_FUNCTION1.getFunctionID()));
+    assertFalse(memory.isLoading(DUMMY_FUNCTION2.getFunctionID()));
   }
 
   @Test
@@ -112,5 +126,9 @@ public class MemoryTest {
     assertEquals(1, memory.size());
   }
 
+  @Test
+  public void canGetMostRecentIdleFunction() {
+    
+  }
 
 }

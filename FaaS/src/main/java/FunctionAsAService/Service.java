@@ -18,7 +18,7 @@ public class Service implements Comparable<Service> {
     this(function, status, 0); // invocation doesn't matter
   }
 
-  private Service(Function function, Status status, int invocationOrder) {
+  public Service(Function function, Status status, int invocationOrder) {
     this.function = function;
     this.status = status;
     this.invocationOrder = invocationOrder;
@@ -85,5 +85,9 @@ public class Service implements Comparable<Service> {
     return (this.invocationOrder == service.invocationOrder)
         ? this.getFunction().getFunctionID() - service.getFunction().getFunctionID()
         : this.invocationOrder - service.invocationOrder;
+  }
+
+  public int getFunctionID() {
+    return getFunction().getFunctionID();
   }
 }
