@@ -1,4 +1,4 @@
-package Backend.Memory;
+package Memory;
 
 public enum Status
 {

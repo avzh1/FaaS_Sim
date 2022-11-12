@@ -1,14 +1,16 @@
-package Backend.Memory;
+package Memory;
 
-import static Backend.Memory.MemoryException.MEMORY_CLASH;
-import static Backend.Memory.MemoryException.MEMORY_MISSING;
-import static Backend.Memory.MemoryException.MEMORY_OVERFLOW;
-import static Backend.Memory.Service.newActiveService;
-import static Backend.Memory.Service.newIdleService;
-import static Backend.Memory.Service.newLoadingService;
-import static Backend.Memory.Service.newUnreservedService;
+import static Memory.MemoryException.MEMORY_CLASH;
+import static Memory.MemoryException.MEMORY_MISSING;
+import static Memory.MemoryException.MEMORY_OVERFLOW;
+import static FunctionAsAService.Service.newActiveService;
+import static FunctionAsAService.Service.newIdleService;
+import static FunctionAsAService.Service.newLoadingService;
+import static FunctionAsAService.Service.newUnreservedService;
 
-import Backend.Function;
+import FunctionAsAService.Function;
+import FunctionAsAService.Service;
+import FunctionAsAService.ServiceException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -92,11 +94,13 @@ public class Memory {
   }
 
   private void canAddToMemory(Function function) throws MemoryException {
-    if (memory.size() >= maximumCapacity) {
+    if (size() >= maximumCapacity) {
       throw MEMORY_OVERFLOW;
     }
     if (memory.containsKey(function.getFunctionID())) {
       throw MEMORY_CLASH;
     }
   }
+
+
 }

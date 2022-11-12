@@ -1,12 +1,11 @@
-package Backend;
+package Memory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import Backend.Memory.Memory;
-import Backend.Memory.MemoryException;
-import Backend.Memory.ServiceException;
+import FunctionAsAService.Function;
+import FunctionAsAService.ServiceException;
 import org.junit.Test;
 
 public class MemoryTest {
@@ -112,5 +111,6 @@ public class MemoryTest {
     assertTrue(memory.isActive(DUMMY_FUNCTION1.getFunctionID()));
     assertEquals(1, memory.size());
   }
+
 
 }

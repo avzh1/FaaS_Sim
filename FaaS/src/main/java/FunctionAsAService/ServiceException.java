@@ -1,4 +1,4 @@
-package Backend.Memory;
+package FunctionAsAService;
 
 public class ServiceException extends Exception {
 

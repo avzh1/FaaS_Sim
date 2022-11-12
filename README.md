@@ -1,6 +1,6 @@
 # SimulationCW
 
-Backend.Function-as-a-Service (FaaS) plaform simulation.
+FunctionAsAService.Function-as-a-Service (FaaS) plaform simulation.
 When a new request for a serverless function arrives, if the contianer is not present in memory the request will be blocked until the container is loaded, introducing an overhead on the request response tim ecalled the cold start time. Instead, if the container is present in memory and can accept the incoming request, the cold start time will not be incurred. Note that the incoming request may be rejected, even though the contined is present in memory.
 
 ## Simulation Model
