@@ -3,6 +3,7 @@ package Memory;
 import static FunctionAsAService.Service.newActiveService;
 import static FunctionAsAService.Service.newLoadingService;
 import static FunctionAsAService.Service.newUnreservedService;
+import static Memory.MemoryException.MEMORY_BUSY;
 import static Memory.MemoryException.MEMORY_CLASH;
 import static Memory.MemoryException.MEMORY_MISSING;
 import static Memory.MemoryException.MEMORY_OVERFLOW;
@@ -119,4 +120,16 @@ public class Memory {
   }
 
 
+  public boolean canEvict() {
+    // can evict if at least one idle
+    return idleFunctions.size() != 0;
+  }
+
+  public Function evict() throws MemoryException {
+    if (!canEvict()) {
+      throw MEMORY_BUSY;
+    }
+    // evict the oldest idle service
+    return idleFunctions.pop();
+  }
 }

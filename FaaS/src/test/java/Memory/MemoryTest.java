@@ -127,8 +127,39 @@ public class MemoryTest {
   }
 
   @Test
-  public void canGetMostRecentIdleFunction() {
-    
+  public void cannotEvictWhenAllThreadsWorking() throws MemoryException {
+    Memory largerMemory = new Memory(20);
+    for (int i = 0; i < 10; i++) {
+      largerMemory.enqueueActive(new Function(i, 0, 0));
+      assertEquals(i + 1, largerMemory.size());
+    }
+    for (int i = 0; i < 10; i++) {
+      int id = 10 + i;
+      largerMemory.enqueueLoading(new Function(id, 0, 0));
+      assertEquals(id + 1, largerMemory.size());
+    }
+    assertFalse(largerMemory.canEvict());
+  }
+
+  @Test
+  public void canEvictWhenExistsAtLeastOneIdleThread() throws MemoryException {
+    memory.enqueueIdle(DUMMY_FUNCTION1);
+    assertTrue(memory.canEvict());
+  }
+
+  @Test
+  public void evictionPolicyRemovesTheOldestIdleService() throws MemoryException {
+    Memory largerMemory = new Memory(10);
+    for (int i = 0; i < 10; i++) {
+      largerMemory.enqueueIdle(new Function(i, 0, 0));
+      assertEquals(i + 1, largerMemory.size());
+    }
+    // FunctionID = 0 is the oldest
+    assertTrue(largerMemory.canEvict());
+    assertEquals(0, largerMemory.evict().getFunctionID());
+    // FunctionID = 1 is the oldest
+    assertTrue(largerMemory.canEvict());
+    assertEquals(1, largerMemory.evict().getFunctionID());
   }
 
 }
