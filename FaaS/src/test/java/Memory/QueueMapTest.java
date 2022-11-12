@@ -7,39 +7,39 @@ import static org.junit.Assert.assertTrue;
 import FunctionAsAService.Function;
 import org.junit.Test;
 
-public class IdleQueueTest {
+public class QueueMapTest {
 
-  IdleQueue idleQueue = new IdleQueue();
+  QueueMap<Integer, Function> idleQueue = new QueueMap<Integer, Function>();
 
   private static final Function DUMMY_FUNCTION1 = new Function(1, 0, 0);
   private static final Function DUMMY_FUNCTION2 = new Function(2, 0, 0);
   private static final Function DUMMY_FUNCTION3 = new Function(3, 0, 0);
 
   @Test
-  public void addingToQueueIncrementsSize() throws MemoryException {
-    idleQueue.add(DUMMY_FUNCTION1);
+  public void addingToQueueIncrementsSize() {
+    idleQueue.put(DUMMY_FUNCTION1.getFunctionID(), DUMMY_FUNCTION1);
     assertEquals(1, idleQueue.size());
   }
 
   @Test
-  public void containsCanSeeThingsInQueue() throws MemoryException {
-    idleQueue.add(DUMMY_FUNCTION1);
-    idleQueue.add(DUMMY_FUNCTION3);
-    assertTrue(idleQueue.contains(DUMMY_FUNCTION1.getFunctionID()));
-    assertTrue(idleQueue.contains(DUMMY_FUNCTION3.getFunctionID()));
-    assertFalse(idleQueue.contains(DUMMY_FUNCTION2.getFunctionID()));
+  public void containsCanSeeThingsInQueue() {
+    idleQueue.put(DUMMY_FUNCTION1.getFunctionID(), DUMMY_FUNCTION1);
+    idleQueue.put(DUMMY_FUNCTION3.getFunctionID(), DUMMY_FUNCTION3);
+    assertTrue(idleQueue.containsKey(DUMMY_FUNCTION1.getFunctionID()));
+    assertTrue(idleQueue.containsKey(DUMMY_FUNCTION3.getFunctionID()));
+    assertFalse(idleQueue.containsKey(DUMMY_FUNCTION2.getFunctionID()));
   }
 
   @Test
   public void peekingTopOfQueuePreservesStructure() throws MemoryException {
-    idleQueue.add(DUMMY_FUNCTION1);
+    idleQueue.put(DUMMY_FUNCTION1.getFunctionID(), DUMMY_FUNCTION1);
     assertEquals(DUMMY_FUNCTION1, idleQueue.peek());
     assertEquals(1, idleQueue.size());
   }
 
   @Test
   public void poppingTopOfQueueDecrementsSize() throws MemoryException {
-    idleQueue.add(DUMMY_FUNCTION1);
+    idleQueue.put(DUMMY_FUNCTION1.getFunctionID(), DUMMY_FUNCTION1);
     assertEquals(DUMMY_FUNCTION1, idleQueue.pop());
     assertEquals(0, idleQueue.size());
   }
@@ -47,7 +47,7 @@ public class IdleQueueTest {
   @Test
   public void containsCantSeePoppedServices() throws MemoryException {
     poppingTopOfQueueDecrementsSize();
-    assertFalse(idleQueue.contains(DUMMY_FUNCTION1.getFunctionID()));
+    assertFalse(idleQueue.containsKey(DUMMY_FUNCTION1.getFunctionID()));
   }
 
   @Test(expected = MemoryException.class)
@@ -57,25 +57,25 @@ public class IdleQueueTest {
   }
 
   @Test
-  public void removingElementFromMiddleOfQueuePreservesOtherOrders() throws MemoryException {
-    idleQueue.add(DUMMY_FUNCTION1);
-    idleQueue.add(DUMMY_FUNCTION2);
-    idleQueue.add(DUMMY_FUNCTION3);
+  public void removingElementFromMiddleOfQueuePreservesOtherOrders() {
+    idleQueue.put(DUMMY_FUNCTION1.getFunctionID(), DUMMY_FUNCTION1);
+    idleQueue.put(DUMMY_FUNCTION2.getFunctionID(), DUMMY_FUNCTION2);
+    idleQueue.put(DUMMY_FUNCTION3.getFunctionID(), DUMMY_FUNCTION3);
     assertEquals(3, idleQueue.size());
 
     assertEquals(DUMMY_FUNCTION2, idleQueue.remove(DUMMY_FUNCTION2.getFunctionID()));
 
     assertEquals(2, idleQueue.size());
 
-    assertTrue(idleQueue.contains(DUMMY_FUNCTION1.getFunctionID()));
-    assertTrue(idleQueue.contains(DUMMY_FUNCTION3.getFunctionID()));
-    assertFalse(idleQueue.contains(DUMMY_FUNCTION2.getFunctionID()));
+    assertTrue(idleQueue.containsKey(DUMMY_FUNCTION1.getFunctionID()));
+    assertTrue(idleQueue.containsKey(DUMMY_FUNCTION3.getFunctionID()));
+    assertFalse(idleQueue.containsKey(DUMMY_FUNCTION2.getFunctionID()));
   }
 
   @Test
   public void removingElementFromMiddleAndAddingBackPlacesAtBackOfQueue() throws MemoryException {
     removingElementFromMiddleOfQueuePreservesOtherOrders();
-    idleQueue.add(DUMMY_FUNCTION2);
+    idleQueue.put(DUMMY_FUNCTION2.getFunctionID(), DUMMY_FUNCTION2);
     assertEquals(3, idleQueue.size());
 
     assertEquals(DUMMY_FUNCTION1, idleQueue.pop());

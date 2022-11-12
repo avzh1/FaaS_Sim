@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import FunctionAsAService.Function;
-import FunctionAsAService.ServiceException;
 import org.junit.Test;
 
 public class MemoryTest {
@@ -102,7 +101,7 @@ public class MemoryTest {
 
   @Test
   public void promotingALOADINGFunctionPromotesToACTIVE()
-      throws MemoryException, ServiceException {
+      throws MemoryException {
     memory.enqueueLoading(DUMMY_FUNCTION1);
     assertTrue(memory.isLoading(DUMMY_FUNCTION1.getFunctionID()));
     assertFalse(memory.isActive(DUMMY_FUNCTION1.getFunctionID()));
@@ -115,7 +114,7 @@ public class MemoryTest {
 
   @Test
   public void promotingAnIDLEFunctionPromotesToACTIVE()
-      throws MemoryException, ServiceException {
+      throws MemoryException {
     memory.enqueueIdle(DUMMY_FUNCTION1);
     assertTrue(memory.isIdle(DUMMY_FUNCTION1.getFunctionID()));
     assertFalse(memory.isActive(DUMMY_FUNCTION1.getFunctionID()));
@@ -160,6 +159,17 @@ public class MemoryTest {
     // FunctionID = 1 is the oldest
     assertTrue(largerMemory.canEvict());
     assertEquals(1, largerMemory.evict().getFunctionID());
+  }
+
+  @Test
+  public void emplacingAnEventThatWasOnceIdleShouldPutItAtTheBack() throws MemoryException {
+    memory.enqueueIdle(DUMMY_FUNCTION1);
+    memory.enqueueIdle(DUMMY_FUNCTION2);
+    assertEquals(DUMMY_FUNCTION1, memory.evict());
+    memory.enqueueIdle(DUMMY_FUNCTION3);
+    assertEquals(DUMMY_FUNCTION2, memory.evict());
+    memory.enqueueIdle(DUMMY_FUNCTION1);
+    assertEquals(DUMMY_FUNCTION3, memory.evict());
   }
 
 }
