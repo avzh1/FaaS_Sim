@@ -2,6 +2,7 @@ package FunctionAsAService.Memory;
 
 import FunctionAsAService.Function;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,7 +38,7 @@ public class Memory {
    * that there will be precisely M functions in memory at all times, so you will not have to model
    * unused memory that has yet to be loaded/initialised
    */
-  public void fillMemory(Set<Function> functions) {
+  public void fillMemory(List<Function> functions) {
     for (Function f : functions) {
       if (isFull()) {
         break;

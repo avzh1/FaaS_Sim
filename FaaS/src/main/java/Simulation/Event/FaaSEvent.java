@@ -5,6 +5,7 @@ import Simulation.FaaSSimulation;
 
 public abstract class FaaSEvent extends Event {
 
+  // Server state variables
   protected final Function function;
   protected final FaaSSimulation simulation;
 
@@ -18,7 +19,7 @@ public abstract class FaaSEvent extends Event {
    * @return new Promotion event displaced by a sample of coldStart distribution
    */
   public final Promotion coldStart() {
-    double coldStart = 0.5; // something to do with simulation.memory (constant for all)
+    double coldStart = FaaSSimulation.coldStart;
     Promotion event = new Promotion(getInvokeTime() + coldStart, function, simulation);
     this.setNextEvent(event);
     return event;

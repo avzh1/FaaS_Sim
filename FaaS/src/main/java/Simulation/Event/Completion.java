@@ -15,8 +15,8 @@ public class Completion extends FaaSEvent {
 
   @Override
   public void invoke() {
-    System.out.println(this + " Completion");
     simulation.getMemory().demote(function);
+    this.function.logNewCompletion();
     simulation.schedule(request());
   }
 }

@@ -11,10 +11,13 @@ import java.util.PriorityQueue;
 public abstract class Sim {
 
   // Comparator for inserting elements into the queue based on time they were scheduled.
-  private static final Comparator<Event> EVENT_COMPARATOR = (e1, e2) -> (int) (e1.getInvokeTime()
-      - e2.getInvokeTime());
+  private static final Comparator<Event> EVENT_COMPARATOR =
+      (e1, e2) -> (int) (e1.getInvokeTime() - e2.getInvokeTime());
   private final PriorityQueue<Event> diary;
-  private double time = 0.0; // seconds
+
+  // Protected attributes visible to child classes
+  protected double time = 0.0; // seconds
+  protected int numEvents = 0;
 
   public Sim() {
     diary = new PriorityQueue<>(EVENT_COMPARATOR);
@@ -55,6 +58,7 @@ public abstract class Sim {
       assert topEvent != null;
       time = topEvent.getInvokeTime();
       if (!this.stop()) {
+        numEvents++;
         topEvent.invoke();
       }
     }

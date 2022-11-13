@@ -14,6 +14,13 @@ public class Function {
   /* Arrival of requests for this function */
   private final double lambda_f; // requests / second
 
+  // Simulation variables
+  private int requests = 0;
+  private int invocations = 0;
+  private int coldStarts = 0;
+  private int promotions = 0;
+  private int completions = 0;
+  private int rejections = 0;
 
   public Function(int functionID, double avgServiceTimeMilliseconds, int invocations30Days) {
     this.functionID = functionID;
@@ -58,10 +65,58 @@ public class Function {
     return Mf;
   }
 
+  public void logNewRequest() {
+    this.requests++;
+  }
+
+  public void logNewInvocation() {
+    this.invocations++;
+  }
+
+  public void logNewColdStart() {
+    this.coldStarts++;
+  }
+
+  public void logNewPromotion() {
+    this.promotions++;
+  }
+
+  public void logNewCompletion() {
+    this.completions++;
+  }
+
+  public void logNewRejection() {
+    rejections++;
+  }
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("ID: ").append(getFunctionID());
     return sb.toString();
+  }
+
+  public int getRequests() {
+    return requests;
+  }
+
+  public int getInvocations() {
+    return invocations;
+  }
+
+  public int getColdStarts() {
+    return coldStarts;
+  }
+
+  public int getPromotions() {
+    return promotions;
+  }
+
+  public int getCompletions() {
+    return completions;
+  }
+
+  public int getRejectsion() {
+    return rejections;
   }
 }

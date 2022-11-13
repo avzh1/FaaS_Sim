@@ -5,8 +5,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -21,19 +21,31 @@ public class Main {
     // Set up objects for simulation
     String pathToCSV = "trace-final.csv"; //args[0];
     Memory memory = new Memory(M);
-    Set<Function> functions = parseCSV(pathToCSV);
-    System.out.println(functions);
+    List<Function> functions = parseCSV(pathToCSV);
     // Create a new simulation
     memory.fillMemory(functions); // A6
     FaaSSimulation sim = new FaaSSimulation(memory, functions);
     sim.runSim();
+    // Print function statistics
+    printStatistics(functions);
   }
 
-  private static @NotNull Set<Function> parseCSV(String path) throws IOException {
+  private static void printStatistics(List<Function> functions) {
+    for (Function f : functions) {
+      System.out.println(
+          f.getFunctionID() + ": " + "(Rs:" + f.getRequests() + ", Colds:" + f.getColdStarts()
+              + ", Is:"
+              + f.getInvocations() + ", Ps:" + f.getPromotions() + ", Cs:" + f.getCompletions()
+              + ")"
+              + "(Rej:" + f.getRejectsion() + ")");
+    }
+  }
+
+  private static @NotNull List<Function> parseCSV(String path) throws IOException {
     File fp = new File(path);
     FileReader fr = new FileReader(fp);
     BufferedReader br = new BufferedReader(fr);
-    Set<Function> functions = new HashSet<>();
+    List<Function> functions = new LinkedList<>();
 
     String line = br.readLine(); // ignore the heading (assume correct format)
     while ((line = br.readLine()) != null) {

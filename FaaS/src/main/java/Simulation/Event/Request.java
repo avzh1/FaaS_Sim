@@ -25,21 +25,26 @@ public class Request extends FaaSEvent {
 
   @Override
   public void invoke() {
-    System.out.println(this + " Request");
     Memory memory = simulation.getMemory();
 
     // Bookkeeping
+    this.function.logNewRequest();
 
     // go through cases as in JavaDoc above
     if (memory.isIdle(function.getFunctionID())) {
       memory.promote(function);
       simulation.schedule(completion());
-    } else if (memory.isUnreserved(function.getFunctionID())) {
-      if (memory.canEvict()) {
-        memory.evict();
-        memory.enqueueLoading(function);
-        simulation.schedule(coldStart());
-      }
+    } else if (memory.isUnreserved(function.getFunctionID()) && memory.canEvict()) {
+      memory.evict();
+      memory.enqueueLoading(function);
+      simulation.schedule(coldStart());
+      this.function.logNewColdStart();
+    } else {
+      this.function.logNewRejection();
     }
+
+    // The inter-arrival rate for an arrival of the function has come and gone. Therefore, schedule
+    // another function call.
+    simulation.schedule(request());
   }
 }
