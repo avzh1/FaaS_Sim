@@ -5,8 +5,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.StringJoiner;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -15,34 +17,47 @@ import org.jetbrains.annotations.NotNull;
  */
 public class Main {
 
-  private static final int M = 40; // 4000 MB (4GB)
+  private static final int M = 400; // 4000 MB (4GB)
 
   public static void main(String[] args) throws IOException {
     // Set up objects for simulation
-    String pathToCSV = "trace-final.csv"; //args[0];
+    File file = new File("trace-final.csv");
     Memory memory = new Memory(M);
-    List<Function> functions = parseCSV(pathToCSV);
+    List<Function> functions = parseCSV(file);
     // Create a new simulation
     memory.fillMemory(functions); // A6
     FaaSSimulation sim = new FaaSSimulation(memory, functions);
     sim.runSim();
     // Print function statistics
-    printStatistics(functions);
+    String statistics = collectFunctionStatistics(functions);
+    // Save to file
+    File pathToFunctionResultsCSV = new File(file.getAbsoluteFile().getParentFile(),
+        "trace-function-results.csv");
+    printToFile(pathToFunctionResultsCSV, statistics);
   }
 
-  private static void printStatistics(List<Function> functions) {
+  private static void printToFile(File file, String content) throws IOException {
+    Files.writeString(file.toPath(), content);
+  }
+
+  private static String collectFunctionStatistics(List<Function> functions) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("FunctionID,Requests,ColdStarts,Invocations,Promotions,Completions,Rejections\n");
     for (Function f : functions) {
-      System.out.println(
-          f.getFunctionID() + ": " + "(Rs:" + f.getRequests() + ", Colds:" + f.getColdStarts()
-              + ", Is:"
-              + f.getInvocations() + ", Ps:" + f.getPromotions() + ", Cs:" + f.getCompletions()
-              + ")"
-              + "(Rej:" + f.getRejectsion() + ")");
+      StringJoiner sj = new StringJoiner(",");
+      sj.add(Integer.toString(f.getFunctionID()));
+      sj.add(Integer.toString(f.getRequests()));
+      sj.add(Integer.toString(f.getColdStarts()));
+      sj.add(Integer.toString(f.getInvocations()));
+      sj.add(Integer.toString(f.getPromotions()));
+      sj.add(Integer.toString(f.getCompletions()));
+      sj.add(Integer.toString(f.getRejectsion()));
+      sb.append(sj).append("\n");
     }
+    return sb.toString();
   }
 
-  private static @NotNull List<Function> parseCSV(String path) throws IOException {
-    File fp = new File(path);
+  private static @NotNull List<Function> parseCSV(File fp) throws IOException {
     FileReader fr = new FileReader(fp);
     BufferedReader br = new BufferedReader(fr);
     List<Function> functions = new LinkedList<>();

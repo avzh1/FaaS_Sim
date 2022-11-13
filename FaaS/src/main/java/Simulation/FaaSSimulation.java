@@ -3,6 +3,7 @@ package Simulation;
 import FunctionAsAService.Function;
 import FunctionAsAService.Memory.Memory;
 import Simulation.Event.Request;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,7 +28,8 @@ public class FaaSSimulation extends Sim {
   }
 
   public void runSim() {
-
+    // initialise the memory with a random sample of Functions
+    Collections.shuffle(functions);
     for (Function f : functions) {
       // for each function, trigger an initial burst of requests in some arbitrary order. This order
       // doesn't matter initially as it is part of the start-up window we don't care about
