@@ -1,6 +1,7 @@
 package Simulation.Event;
 
 import FunctionAsAService.Function;
+import Samplers.Sampler;
 import Simulation.FaaSSimulation;
 
 public abstract class FaaSEvent extends Event {
@@ -19,7 +20,7 @@ public abstract class FaaSEvent extends Event {
    * @return new Promotion event displaced by a sample of coldStart distribution
    */
   public final Promotion coldStart() {
-    double coldStart = FaaSSimulation.coldStart;
+    double coldStart = Sampler.Exponential(FaaSSimulation.coldStart);
     Promotion event = new Promotion(getInvokeTime() + coldStart, function, simulation);
     this.setNextEvent(event);
     return event;
@@ -29,7 +30,7 @@ public abstract class FaaSEvent extends Event {
    * @return new Request event displaced by a sample of inter arrival rate for a particular function
    */
   public final Request request() {
-    double interArrivalTime = 10.0;
+    double interArrivalTime = Sampler.Exponential(function.getLambda_f());
     Request event = new Request(getInvokeTime() + interArrivalTime, function, simulation);
     this.setNextEvent(event);
     return event;
@@ -39,7 +40,7 @@ public abstract class FaaSEvent extends Event {
    * @return new Promotion event displaced by a sample of average processing time for a function
    */
   public final Completion completion() {
-    double completionTime = 10.0;
+    double completionTime = Sampler.Exponential(function.getAvgServiceTimeSeconds());
     Completion event = new Completion(getInvokeTime() + completionTime, function, simulation);
     this.setNextEvent(event);
     return event;
