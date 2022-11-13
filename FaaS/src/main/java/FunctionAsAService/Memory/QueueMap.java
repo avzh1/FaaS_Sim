@@ -1,4 +1,4 @@
-package Memory;
+package FunctionAsAService.Memory;
 
 import java.util.Collection;
 import java.util.HashMap;

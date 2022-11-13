@@ -1,7 +1,7 @@
 package Simulation.Event;
 
 import FunctionAsAService.Function;
-import Memory.Memory;
+import FunctionAsAService.Memory.Memory;
 import Simulation.FaaSSimulation;
 
 /**

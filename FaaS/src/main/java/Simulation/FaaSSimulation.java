@@ -1,7 +1,7 @@
 package Simulation;
 
 import FunctionAsAService.Function;
-import Memory.Memory;
+import FunctionAsAService.Memory.Memory;
 import Simulation.Event.Event;
 import Simulation.Event.Request;
 import java.util.Set;
@@ -10,6 +10,10 @@ import java.util.Set;
  * My class for completing this simulation task
  */
 public class FaaSSimulation extends Sim {
+
+  // suffers an exponentially distributed overhead with mean 1/coldStart before being loaded in
+  // memory
+  private static final double coldStart = 0.5; // 1 / seconds
 
   // first event
   private Event arrivalEvent;

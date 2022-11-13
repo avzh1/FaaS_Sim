@@ -1,5 +1,5 @@
 import FunctionAsAService.Function;
-import Memory.Memory;
+import FunctionAsAService.Memory.Memory;
 import Simulation.FaaSSimulation;
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,7 +22,7 @@ public class Main {
     String pathToCSV = "trace-final.csv"; //args[0];
     Memory memory = new Memory(M);
     Set<Function> functions = parseCSV(pathToCSV);
-
+    System.out.println(functions);
     // Create a new simulation
     memory.fillMemory(functions); // A6
     FaaSSimulation sim = new FaaSSimulation(memory, functions);

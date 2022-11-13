@@ -19,7 +19,9 @@ public abstract class FaaSEvent extends Event {
    */
   public final Promotion coldStart() {
     double coldStart = 0.5; // something to do with simulation.memory (constant for all)
-    return new Promotion(getInvokeTime() + coldStart, function, simulation);
+    Promotion event = new Promotion(getInvokeTime() + coldStart, function, simulation);
+    this.setNextEvent(event);
+    return event;
   }
 
   /**
@@ -27,7 +29,9 @@ public abstract class FaaSEvent extends Event {
    */
   public final Request request() {
     double interArrivalTime = 10.0;
-    return new Request(getInvokeTime() + interArrivalTime, function, simulation);
+    Request event = new Request(getInvokeTime() + interArrivalTime, function, simulation);
+    this.setNextEvent(event);
+    return event;
   }
 
   /**
@@ -35,7 +39,9 @@ public abstract class FaaSEvent extends Event {
    */
   public final Completion completion() {
     double completionTime = 10.0;
-    return new Completion(getInvokeTime() + completionTime, function, simulation);
+    Completion event = new Completion(getInvokeTime() + completionTime, function, simulation);
+    this.setNextEvent(event);
+    return event;
   }
 
   @Override

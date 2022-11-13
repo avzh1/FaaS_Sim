@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import FunctionAsAService.Function;
+import FunctionAsAService.Memory.Memory;
+import FunctionAsAService.Memory.MemoryException;
 import org.junit.Test;
 
 public class MemoryTest {

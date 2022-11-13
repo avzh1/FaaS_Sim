@@ -14,7 +14,7 @@ public abstract class Sim {
   private static final Comparator<Event> EVENT_COMPARATOR = (e1, e2) -> (int) (e1.getInvokeTime()
       - e2.getInvokeTime());
   private final PriorityQueue<Event> diary;
-  private double time = 0.0;
+  private double time = 0.0; // seconds
 
   public Sim() {
     diary = new PriorityQueue<>(EVENT_COMPARATOR);
@@ -47,7 +47,7 @@ public abstract class Sim {
 
   /**
    * Function for executing the simulation while the event queue is not empty and a stopping
-   * condition isn't true
+   * condition isn't true.
    */
   public void go() {
     while (!diary.isEmpty() && !this.stop()) {

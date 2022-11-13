@@ -1,9 +1,4 @@
-package Memory;
-
-import static Memory.MemoryException.MEMORY_BUSY;
-import static Memory.MemoryException.MEMORY_CLASH;
-import static Memory.MemoryException.MEMORY_MISSING;
-import static Memory.MemoryException.MEMORY_OVERFLOW;
+package FunctionAsAService.Memory;
 
 import FunctionAsAService.Function;
 import java.util.HashMap;
@@ -124,7 +119,7 @@ public class Memory {
   public void promote(Function function) {
     // does this service exist in memory?
     if (isUnreserved(function.getFunctionID())) {
-      throw MEMORY_MISSING;
+      throw MemoryException.MEMORY_MISSING;
     }
 
     if (isLoading(function.getFunctionID())) {
@@ -150,12 +145,12 @@ public class Memory {
   public void demote(Function function) {
     // does this service exist in memory?
     if (isUnreserved(function.getFunctionID())) {
-      throw MEMORY_MISSING;
+      throw MemoryException.MEMORY_MISSING;
     }
 
     // is this function loading?
     if (isLoading(function.getFunctionID())) {
-      throw MEMORY_BUSY;
+      throw MemoryException.MEMORY_BUSY;
     }
 
     if (isActive(function.getFunctionID())) {
@@ -170,10 +165,10 @@ public class Memory {
 
   private void canAddToMemory(Function function) {
     if (size() >= maximumCapacity) {
-      throw MEMORY_OVERFLOW;
+      throw MemoryException.MEMORY_OVERFLOW;
     }
     if (!isUnreserved(function.getFunctionID())) {
-      throw MEMORY_CLASH;
+      throw MemoryException.MEMORY_CLASH;
     }
   }
 
@@ -188,7 +183,7 @@ public class Memory {
 
   public Function evict() {
     if (!canEvict()) {
-      throw MEMORY_BUSY;
+      throw MemoryException.MEMORY_BUSY;
     }
     // evict the oldest idle service
     return idle.pop();
