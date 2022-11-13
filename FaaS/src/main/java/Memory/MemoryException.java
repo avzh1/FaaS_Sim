@@ -1,6 +1,6 @@
 package Memory;
 
-public class MemoryException extends Exception {
+public class MemoryException extends RuntimeException {
 
   public final static MemoryException MEMORY_CLASH = new MemoryException(
       "Attempted to reserve memory for a function that is already in memory");

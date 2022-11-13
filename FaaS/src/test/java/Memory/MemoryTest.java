@@ -126,6 +126,36 @@ public class MemoryTest {
   }
 
   @Test
+  public void demotingFunctionMovesActiveFunctionsToIdleMemorySpace() {
+    memory.enqueueActive(DUMMY_FUNCTION1);
+    assertTrue(memory.isActive(DUMMY_FUNCTION1.getFunctionID()));
+    memory.demote(DUMMY_FUNCTION1);
+    assertFalse(memory.isActive(DUMMY_FUNCTION1.getFunctionID()));
+    assertTrue(memory.isIdle(DUMMY_FUNCTION1.getFunctionID()));
+  }
+
+  @Test
+  public void demotingFunctionRemovesIdleFunctionsFromMemory() {
+    memory.enqueueIdle(DUMMY_FUNCTION1);
+    assertTrue(memory.isIdle(DUMMY_FUNCTION1.getFunctionID()));
+    memory.demote(DUMMY_FUNCTION1);
+    assertFalse(memory.isIdle(DUMMY_FUNCTION1.getFunctionID()));
+    assertTrue(memory.isUnreserved(DUMMY_FUNCTION1.getFunctionID()));
+  }
+
+  @Test(expected = MemoryException.class)
+  public void demotingLoadingFunctionThrowsError() {
+    memory.enqueueLoading(DUMMY_FUNCTION1);
+    assertTrue(memory.isLoading(DUMMY_FUNCTION1.getFunctionID()));
+    memory.demote(DUMMY_FUNCTION1);
+  }
+
+  @Test(expected = MemoryException.class)
+  public void demotingUnLoadedFunctionThrowsError() {
+    memory.demote(DUMMY_FUNCTION1);
+  }
+
+  @Test
   public void cannotEvictWhenAllThreadsWorking() throws MemoryException {
     Memory largerMemory = new Memory(20);
     for (int i = 0; i < 10; i++) {

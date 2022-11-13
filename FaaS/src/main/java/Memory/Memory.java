@@ -8,6 +8,7 @@ import static Memory.MemoryException.MEMORY_OVERFLOW;
 import FunctionAsAService.Function;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Memory class has three partitions of used memory: active, loading and idle.
@@ -22,9 +23,9 @@ import java.util.Map;
  */
 public class Memory {
 
-  Map<Integer, Function> active = new HashMap<Integer, Function>();
-  Map<Integer, Function> loading = new HashMap<Integer, Function>();
-  QueueMap<Integer, Function> idle = new QueueMap<Integer, Function>();
+  private final Map<Integer, Function> active = new HashMap<Integer, Function>();
+  private final Map<Integer, Function> loading = new HashMap<Integer, Function>();
+  private final QueueMap<Integer, Function> idle = new QueueMap<Integer, Function>();
 
   private final int maximumCapacity;
 
@@ -33,6 +34,21 @@ public class Memory {
    */
   public Memory(int maximumCapacity) {
     this.maximumCapacity = maximumCapacity;
+  }
+
+  /**
+   * A6: To simplify the simulation you are advised to start the FaaS with the first M function sin
+   * memory in the idle state and the remainder in the unloaded (not in memory) state - this means
+   * that there will be precisely M functions in memory at all times, so you will not have to model
+   * unused memory that has yet to be loaded/initialised
+   */
+  public void fillMemory(Set<Function> functions) {
+    for (Function f : functions) {
+      if (isFull()) {
+        break;
+      }
+      enqueueIdle(f);
+    }
   }
 
   /**
@@ -55,7 +71,7 @@ public class Memory {
    * @throws MemoryException if the memory already contains the function in memory or the maximum
    *                         capacity is exceeded
    */
-  public void enqueueActive(Function function) throws MemoryException {
+  public void enqueueActive(Function function) {
     canAddToMemory(function);
     active.put(function.getFunctionID(), function);
   }
@@ -66,7 +82,7 @@ public class Memory {
    * @throws MemoryException if the memory already contains the function in memory or the maximum
    *                         capacity is exceeded
    */
-  public void enqueueIdle(Function function) throws MemoryException {
+  public void enqueueIdle(Function function) {
     canAddToMemory(function);
     idle.put(function.getFunctionID(), function);
   }
@@ -77,7 +93,7 @@ public class Memory {
    * @throws MemoryException if the memory already contains the function in memory or the maximum
    *                         capacity is exceeded
    */
-  public void enqueueLoading(Function function) throws MemoryException {
+  public void enqueueLoading(Function function) {
     canAddToMemory(function);
     loading.put(function.getFunctionID(), function);
   }
@@ -105,7 +121,7 @@ public class Memory {
    * <p>
    * Idle -> Active
    */
-  public void promote(Function function) throws MemoryException {
+  public void promote(Function function) {
     // does this service exist in memory?
     if (isUnreserved(function.getFunctionID())) {
       throw MEMORY_MISSING;
@@ -122,7 +138,37 @@ public class Memory {
     }
   }
 
-  private void canAddToMemory(Function function) throws MemoryException {
+  /**
+   * Given a function demotes the function one level down the memory partition hierarchy.
+   * <p>
+   * Active -> Idle
+   * <p>
+   * Idle -> Unreserved
+   * <p>
+   * Loading -> throws exception
+   */
+  public void demote(Function function) {
+    // does this service exist in memory?
+    if (isUnreserved(function.getFunctionID())) {
+      throw MEMORY_MISSING;
+    }
+
+    // is this function loading?
+    if (isLoading(function.getFunctionID())) {
+      throw MEMORY_BUSY;
+    }
+
+    if (isActive(function.getFunctionID())) {
+      // move function to idle memory
+      idle.put(function.getFunctionID(), active.remove(function.getFunctionID()));
+    } else if (isIdle(function.getFunctionID())) {
+      // remove from memory
+      idle.remove(function.getFunctionID());
+    }
+
+  }
+
+  private void canAddToMemory(Function function) {
     if (size() >= maximumCapacity) {
       throw MEMORY_OVERFLOW;
     }
@@ -140,7 +186,7 @@ public class Memory {
     return idle.size() > 0;
   }
 
-  public Function evict() throws MemoryException {
+  public Function evict() {
     if (!canEvict()) {
       throw MEMORY_BUSY;
     }
