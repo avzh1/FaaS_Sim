@@ -37,6 +37,7 @@ public class FaaSSimulation extends Sim {
   public void runSim() {
     // initialise the memory with a random sample of Functions
     Collections.shuffle(functions);
+
     for (Function f : functions) {
       // for each function, trigger an initial burst of requests in some arbitrary order. This order
       // doesn't matter initially as it is part of the start-up window we don't care about
@@ -110,7 +111,7 @@ public class FaaSSimulation extends Sim {
         .reduce(0, Integer::sum);
   }
 
-  public String collectFunctionStatistics() {
+  public String getFunctionStatistics() {
     StringBuilder sb = new StringBuilder();
     sb.append("FunctionID,Requests,ColdStarts,Promotions,Completions,Rejections\n");
     for (Function f : functions) {
@@ -126,7 +127,7 @@ public class FaaSSimulation extends Sim {
     return sb.toString();
   }
 
-  public String collectSystemStatistics() {
+  public String getSystemStatistics() {
     StringBuilder sb = new StringBuilder();
 
     // Print time frame
