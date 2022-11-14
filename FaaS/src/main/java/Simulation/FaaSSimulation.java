@@ -17,11 +17,13 @@ public class FaaSSimulation extends Sim {
 
   private final Memory memory;
   private final List<Function> functions;
+  private final double simulationTimeSeconds;
   protected int numEvents = 0;
 
-  public FaaSSimulation(Memory memory, List<Function> functions) {
+  public FaaSSimulation(Memory memory, List<Function> functions, double simulationTimeSeconds) {
     this.memory = memory;
     this.functions = functions;
+    this.simulationTimeSeconds = simulationTimeSeconds;
   }
 
   public Memory getMemory() {
@@ -41,7 +43,8 @@ public class FaaSSimulation extends Sim {
 
   @Override
   public boolean stop() {
-    return numEvents > 1000000;
+//    return numEvents > 1000000;
+    return time > simulationTimeSeconds;
   }
 
   @Override

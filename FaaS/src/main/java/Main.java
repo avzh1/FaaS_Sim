@@ -19,28 +19,33 @@ public class Main {
 
   private static final int M = 40; // 4000 MB (4GB)
 
+  private static FaaSSimulation sim;
+
   public static void main(String[] args) throws IOException {
     // Set up objects for simulation
     File file = new File("trace-final.csv");
     Memory memory = new Memory(M);
     List<Function> functions = parseCSV(file);
+
     // Create a new simulation
     memory.fillMemory(functions); // A6
-    FaaSSimulation sim = new FaaSSimulation(memory, functions);
+    sim = new FaaSSimulation(memory, functions, 33 * 24 * 60 * 60);
     sim.runSim();
-    // Print time frame
-    System.out.println("Simulation Ran for: " + sim.getSimulationTime());
+
     // Collect Statistics into String
     String functionStatistics = collectFunctionStatistics(functions);
+
     // Collect CSV version (to not overwrite old)
     File version_file = new File("version.txt");
     int CSV_version =
         Integer.parseInt(new String(Files.readAllBytes(version_file.toPath()))) + 1;
+
     // Save Statistics to file
     printToFile(version_file, String.valueOf(CSV_version));
     File pathToFunctionResultsCSV = new File(file.getAbsoluteFile().getParentFile(),
         "trace-function-results" + CSV_version + ".csv");
     printToFile(pathToFunctionResultsCSV, functionStatistics);
+
     // Print General Statistics to Console
     String systemStatistics = collectSystemStatistics(functions);
     System.out.println(systemStatistics);
@@ -49,11 +54,11 @@ public class Main {
   private static String collectSystemStatistics(List<Function> functions) {
     StringBuilder sb = new StringBuilder();
 
-    double requests = 0;
-    double coldStarts = 0;
-    double promotions = 0;
-    double completions = 0;
-    double rejections = 0;
+    // Print time frame
+    sb.append("Simulation Ran for: ").append(sim.getSimulationTime()).append("\n");
+
+    double requests = 0, coldStarts = 0, promotions = 0, completions = 0, rejections = 0;
+
     for (Function f : functions) {
       requests += f.getRequests();
       coldStarts += f.getColdStarts();
@@ -73,7 +78,7 @@ public class Main {
     double C_ratio = coldStarts / requests;
     sb.append("C_ratio: ").append(C_ratio).append("\n");
     // L_rate: the rate at which requests are lost
-    double L_rate = rejections / requests;
+    double L_rate = rejections / sim.getSimulationTime();
     sb.append("L_rate: ").append(L_rate).append("\n");
 
     return sb.toString();
