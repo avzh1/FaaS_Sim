@@ -14,12 +14,17 @@ public class Main {
   private static final int M = 40; // 4000 MB (4GB)
 
   private static FaaSSimulation sim;
+  private static File traceCSV = new File("trace-final.csv");
+
 
   public static void main(String[] args) throws IOException {
-    // input CSV
-    File traceCSV = new File("trace-final.csv");
-
-    binarySearchSmallestM(traceCSV, 0.05);
+    // Q1.a
+    FaaSSimulation sim = runStandardSimulation(40);
+    System.out.println("Cold start ratio: " + sim.getColdStartRatio());
+    System.out.println("Loss rate: " + sim.getLossRate());
+    // Q1.b
+    System.out.print("Smallest value of M for a cold start less than 5%: ");
+    System.out.println(binarySearchSmallestM(traceCSV, 0.05));
 
     // Save Statistics to file
     saveSimulationStatistics(traceCSV);
@@ -40,19 +45,10 @@ public class Main {
     while (low <= high) {
       medianCapacity = low + ((high - low) / 2);
 
-      // Create a new simulation
-      sim = createFaaSSimBuilder()
-          .withFunctionsFromCSV(path)
-          .withMemoryCapacity(medianCapacity)
-          .withFullIdleMemory() // A6
-          .withSimulationTimeDuration(24 * 60 * 60) // run for 33 days
-          .createFaaSSimulation();
+      FaaSSimulation sim = runStandardSimulation(medianCapacity);
 
-      // Run the simulation
-      sim.runSim();
-
-      double C_ratio = (double) sim.getTotalColdStarts() / (double) sim.getTotalRequests();
-      System.out.println(medianCapacity + ": " + C_ratio);
+      double C_ratio = sim.getColdStartRatio();
+//      System.out.println(medianCapacity + ": " + C_ratio);
 
       // Perform binary search to decide which way to expand/decrease memory
       if (C_ratio > desiredGreatestColdStart) {
@@ -66,6 +62,24 @@ public class Main {
 
     // return least great memory capacity
     return medianCapacity;
+  }
+
+  /**
+   * Runs a standard simulation given a maximum capacity of the memory of a server
+   */
+  private static FaaSSimulation runStandardSimulation(int maximumCapacity) throws IOException {
+    // Create a new simulation
+    sim = createFaaSSimBuilder()
+        .withFunctionsFromCSV(traceCSV)
+        .withMemoryCapacity(maximumCapacity)
+        .withFullIdleMemory() // A6
+        .withSimulationTimeDuration(24 * 60 * 60) // run for 33 days
+        .createFaaSSimulation();
+
+    // Run the simulation
+    sim.runSim();
+
+    return sim;
   }
 
   private static void printToFile(File file, String content) throws IOException {

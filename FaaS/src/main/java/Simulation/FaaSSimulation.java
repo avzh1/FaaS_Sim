@@ -141,13 +141,21 @@ public class FaaSSimulation extends Sim {
     sb.append("---------\n");
 
     // C_ratio: probability that a request incurs a cold start
-    double C_ratio = (double) getTotalColdStarts() / (double) getTotalRequests();
+    double C_ratio = getColdStartRatio();
     sb.append("C_ratio: ").append(C_ratio).append("\n");
     // L_rate: the rate at which requests are lost
-    double L_rate = getTotalRejections() / getSimulationTime();
+    double L_rate = getLossRate();
     sb.append("L_rate: ").append(L_rate).append("\n");
 
     return sb.toString();
+  }
+
+  public double getColdStartRatio() {
+    return (double) getTotalColdStarts() / (double) getTotalRequests();
+  }
+
+  public double getLossRate() {
+    return getTotalRejections() / getSimulationTime();
   }
 
 }
