@@ -12,11 +12,10 @@ public class Function {
   private final int invocations30Days; // requests in 30 days
 
   /* Arrival of requests for this function */
-  private final double lambda_f; // requests / second
+  private final double arrivalRate; // requests / second
 
   // Simulation variables
   private int requests = 0;
-  private int invocations = 0;
   private int coldStarts = 0;
   private int promotions = 0;
   private int completions = 0;
@@ -26,7 +25,7 @@ public class Function {
     this.functionID = functionID;
     this.avgServiceTimeSeconds = convertToSeconds(avgServiceTimeMilliseconds);
     this.invocations30Days = invocations30Days;
-    lambda_f = calculateLambda();
+    arrivalRate = calculateArrivalRate();
   }
 
   private double convertToSeconds(double avgServiceTimeMilliseconds) {
@@ -39,7 +38,7 @@ public class Function {
    *
    * @return arrival rate of requests to function f (requests/second).
    */
-  private double calculateLambda() {
+  private double calculateArrivalRate() {
     // Given the invocations in 30 days metric we can find the sample mean of invocations per second
     int secondsIn30Days = 30 * 24 * 60 * 60;
     return ((double) invocations30Days) / secondsIn30Days;
@@ -57,8 +56,8 @@ public class Function {
     return invocations30Days;
   }
 
-  public double getLambda_f() {
-    return lambda_f;
+  public double getArrivalRate() {
+    return arrivalRate;
   }
 
   public int getMf() {
@@ -67,10 +66,6 @@ public class Function {
 
   public void logNewRequest() {
     this.requests++;
-  }
-
-  public void logNewInvocation() {
-    this.invocations++;
   }
 
   public void logNewColdStart() {
@@ -100,10 +95,6 @@ public class Function {
     return requests;
   }
 
-  public int getInvocations() {
-    return invocations;
-  }
-
   public int getColdStarts() {
     return coldStarts;
   }
@@ -116,7 +107,7 @@ public class Function {
     return completions;
   }
 
-  public int getRejectsion() {
+  public int getRejections() {
     return rejections;
   }
 }

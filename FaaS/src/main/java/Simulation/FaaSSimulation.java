@@ -17,6 +17,7 @@ public class FaaSSimulation extends Sim {
 
   private final Memory memory;
   private final List<Function> functions;
+  protected int numEvents = 0;
 
   public FaaSSimulation(Memory memory, List<Function> functions) {
     this.memory = memory;
@@ -46,5 +47,9 @@ public class FaaSSimulation extends Sim {
   @Override
   public void resetMeasures() {
 
+  }
+
+  public void countEvent() {
+    this.numEvents++;
   }
 }

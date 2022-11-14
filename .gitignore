@@ -1,2 +1,3 @@
 /.idea
 FaaS/target
+*.csv

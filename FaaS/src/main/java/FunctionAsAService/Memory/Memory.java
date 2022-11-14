@@ -4,7 +4,6 @@ import FunctionAsAService.Function;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Memory class has three partitions of used memory: active, loading and idle.

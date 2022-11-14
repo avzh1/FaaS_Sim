@@ -30,7 +30,7 @@ public abstract class FaaSEvent extends Event {
    * @return new Request event displaced by a sample of inter arrival rate for a particular function
    */
   public final Request request() {
-    double interArrivalTime = Sampler.Exponential(function.getLambda_f());
+    double interArrivalTime = Sampler.Exponential(function.getArrivalRate());
     Request event = new Request(getInvokeTime() + interArrivalTime, function, simulation);
     this.setNextEvent(event);
     return event;
@@ -40,7 +40,7 @@ public abstract class FaaSEvent extends Event {
    * @return new Promotion event displaced by a sample of average processing time for a function
    */
   public final Completion completion() {
-    double completionTime = Sampler.Exponential(function.getAvgServiceTimeSeconds());
+    double completionTime = Sampler.Exponential(1 / function.getAvgServiceTimeSeconds());
     Completion event = new Completion(getInvokeTime() + completionTime, function, simulation);
     this.setNextEvent(event);
     return event;

@@ -25,6 +25,7 @@ public class Request extends FaaSEvent {
 
   @Override
   public void invoke() {
+    simulation.countEvent();
     Memory memory = simulation.getMemory();
 
     // Bookkeeping

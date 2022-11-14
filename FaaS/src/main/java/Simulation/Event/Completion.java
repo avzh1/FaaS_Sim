@@ -17,6 +17,5 @@ public class Completion extends FaaSEvent {
   public void invoke() {
     simulation.getMemory().demote(function);
     this.function.logNewCompletion();
-    simulation.schedule(request());
   }
 }
