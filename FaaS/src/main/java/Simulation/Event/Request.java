@@ -1,7 +1,7 @@
 package Simulation.Event;
 
 import FunctionAsAService.Function;
-import FunctionAsAService.Memory.Memory;
+import FunctionAsAService.Server.FaaSServer;
 import Simulation.FaaSSimulation;
 
 /**
@@ -26,7 +26,7 @@ public class Request extends FaaSEvent {
   @Override
   public void invoke() {
     simulation.countEvent();
-    Memory memory = simulation.getMemory();
+    FaaSServer memory = simulation.getServer();
 
     // Bookkeeping
     this.function.logNewRequest();
@@ -47,5 +47,10 @@ public class Request extends FaaSEvent {
     // The inter-arrival rate for an arrival of the function has come and gone. Therefore, schedule
     // another function call.
     simulation.schedule(request());
+  }
+
+  @Override
+  public String toString() {
+    return "REQUEST: " + super.toString();
   }
 }

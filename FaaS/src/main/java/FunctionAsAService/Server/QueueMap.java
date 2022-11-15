@@ -1,4 +1,4 @@
-package FunctionAsAService.Memory;
+package FunctionAsAService.Server;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -7,8 +7,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * An extension to the HashMap interface but also offering queue support. The order of entries is
- * remembered and additional peeking and polling of the top/first Value 'V' can be viewed.
+ * An extension to the Map interface but also offering queue support. Under the hood, this is a
+ * HashMap, however, it offers additional ordering support, such that you can peek/pop from the top
+ * of the entries like a queue.
  *
  * @param <K> Key
  * @param <V> Values
@@ -130,6 +131,10 @@ public class QueueMap<K, V> implements Map<K, V> {
     return node.value;
   }
 
+  /**
+   * Private class for keeping the entries in a 'linked-list' order. This way, lookups into QueueMap
+   * are O(1), removal is O(1) and lookup is O(1)
+   */
   private static class Node<K, V> {
 
     public final K key;

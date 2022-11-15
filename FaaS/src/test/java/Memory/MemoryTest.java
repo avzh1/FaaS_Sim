@@ -5,8 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import FunctionAsAService.Function;
-import FunctionAsAService.Memory.Memory;
-import FunctionAsAService.Memory.MemoryException;
+import FunctionAsAService.Server.FaaSServer;
+import FunctionAsAService.Server.MemoryException;
 import org.junit.Test;
 
 public class MemoryTest {
@@ -16,7 +16,7 @@ public class MemoryTest {
   private final static Function DUMMY_FUNCTION2 = new Function(2, 0, 0);
   private final static Function DUMMY_FUNCTION3 = new Function(3, 0, 0);
 
-  private final Memory memory = new Memory(MAXIMUM_CAPACITY);
+  private final FaaSServer memory = new FaaSServer(MAXIMUM_CAPACITY);
 
   @Test
   public void memoryStartOffEmpty() {
@@ -159,7 +159,7 @@ public class MemoryTest {
 
   @Test
   public void cannotEvictWhenAllThreadsWorking() throws MemoryException {
-    Memory largerMemory = new Memory(20);
+    FaaSServer largerMemory = new FaaSServer(20);
     for (int i = 0; i < 10; i++) {
       largerMemory.enqueueActive(new Function(i, 0, 0));
       assertEquals(i + 1, largerMemory.size());
@@ -180,7 +180,7 @@ public class MemoryTest {
 
   @Test
   public void evictionPolicyRemovesTheOldestIdleService() throws MemoryException {
-    Memory largerMemory = new Memory(10);
+    FaaSServer largerMemory = new FaaSServer(10);
     for (int i = 0; i < 10; i++) {
       largerMemory.enqueueIdle(new Function(i, 0, 0));
       assertEquals(i + 1, largerMemory.size());

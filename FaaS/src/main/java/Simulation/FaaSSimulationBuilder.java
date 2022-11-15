@@ -1,8 +1,8 @@
 package Simulation;
 
 import FunctionAsAService.Function;
-import FunctionAsAService.Memory.Memory;
-import FunctionAsAService.Memory.MemoryException;
+import FunctionAsAService.Server.FaaSServer;
+import FunctionAsAService.Server.MemoryException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -27,22 +27,23 @@ import org.jetbrains.annotations.NotNull;
  */
 public class FaaSSimulationBuilder {
 
-  private Memory memory;
-  private List<Function> functions;
-  private double simulationTimeSeconds;
+  private FaaSServer faaSServer = null;
+  private List<Function> functions = null;
+  private double simulationTimeSeconds = 0.0;
+  private File observationOutput = null;
   private double observationIntervals = Integer.MAX_VALUE;
 
   public static FaaSSimulationBuilder createFaaSSimBuilder() {
     return new FaaSSimulationBuilder();
   }
 
-  public FaaSSimulationBuilder withMemory(Memory memory) {
-    this.memory = memory;
+  public FaaSSimulationBuilder withMemory(FaaSServer faaSServer) {
+    this.faaSServer = faaSServer;
     return this;
   }
 
   public FaaSSimulationBuilder withMemoryCapacity(int capacity) {
-    this.memory = new Memory(capacity);
+    this.faaSServer = new FaaSServer(capacity);
     return this;
   }
 
@@ -88,17 +89,23 @@ public class FaaSSimulationBuilder {
   }
 
   public FaaSSimulation createFaaSSimulation() {
-    return new FaaSSimulation(memory, functions, simulationTimeSeconds, observationIntervals);
+    return new FaaSSimulation(faaSServer, functions, simulationTimeSeconds, observationIntervals,
+        observationOutput);
   }
 
   public FaaSSimulationBuilder withFullIdleMemory() {
-    if (memory == null) {
+    if (faaSServer == null) {
       throw new MemoryException("Cannot fill memory with idle functions as memory is null");
     }
     if (functions == null) {
       throw new MemoryException("Cannot fill memory with idle functions as functions is null");
     }
-    memory.fillMemory(functions);
+    faaSServer.fillMemory(functions);
+    return this;
+  }
+
+  public FaaSSimulationBuilder withObservationLogFile(File observationOutput) {
+    this.observationOutput = observationOutput;
     return this;
   }
 }

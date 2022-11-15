@@ -2,19 +2,15 @@ package FunctionAsAService;
 
 public class Function {
 
-  private static final int Mf = 1; // 100 MB
-
   /* Metadata from CSV */
   private final int functionID; // ID
-  // Assume that the service times for function f are exponentially distributed with rate parameter
-  // 1/Sf (i.e. mean Sf ).
   private final double avgServiceTimeSeconds; // seconds / request
   private final int invocations30Days; // requests in 30 days
 
   /* Arrival of requests for this function */
   private final double arrivalRate; // requests / second
 
-  // Simulation variables
+  /* Simulation tracking variables */
   private int requests = 0;
   private int coldStarts = 0;
   private int promotions = 0;
@@ -23,12 +19,12 @@ public class Function {
 
   public Function(int functionID, double avgServiceTimeMilliseconds, int invocations30Days) {
     this.functionID = functionID;
-    this.avgServiceTimeSeconds = convertToSeconds(avgServiceTimeMilliseconds);
+    this.avgServiceTimeSeconds = millisToSeconds(avgServiceTimeMilliseconds);
     this.invocations30Days = invocations30Days;
     arrivalRate = calculateArrivalRate();
   }
 
-  private double convertToSeconds(double avgServiceTimeMilliseconds) {
+  private double millisToSeconds(double avgServiceTimeMilliseconds) {
     // milliseconds / job -> seconds / job means diving by 10^3
     return avgServiceTimeMilliseconds * Math.pow(10, -3);
   }
@@ -60,9 +56,7 @@ public class Function {
     return arrivalRate;
   }
 
-  public int getMf() {
-    return Mf;
-  }
+  /* Incrementing Simulation Tracking Variables */
 
   public void logNewRequest() {
     this.requests++;
@@ -84,12 +78,7 @@ public class Function {
     rejections++;
   }
 
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("ID: ").append(getFunctionID());
-    return sb.toString();
-  }
+  /* Fetching simulation tracking variables */
 
   public int getRequests() {
     return requests;
@@ -110,4 +99,10 @@ public class Function {
   public int getRejections() {
     return rejections;
   }
+
+  @Override
+  public String toString() {
+    return "ID: " + getFunctionID();
+  }
+
 }

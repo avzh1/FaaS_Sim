@@ -1,9 +1,11 @@
 package Simulation;
 
 import FunctionAsAService.Function;
-import FunctionAsAService.Memory.Memory;
+import FunctionAsAService.Server.FaaSServer;
 import Simulation.Event.Request;
-import java.util.Collections;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -12,38 +14,65 @@ import java.util.StringJoiner;
  */
 public class FaaSSimulation extends Sim {
 
-  // suffers an exponentially distributed overhead with mean 1/coldStart before being loaded in
-  // memory
+  /* Loading functions suffer an exponentially distributed overhead */
   public static final double coldStart = 0.5; // 1 / second
 
-  private final Memory memory;
+  /* Simulation objects */
+  private final FaaSServer server;
   private final List<Function> functions;
+
+  /* Simulation trackers */
   private final double simulationTimeSeconds;
-  private final double observationIntervals;
   protected int numEvents = 0;
 
-  protected FaaSSimulation(Memory memory, List<Function> functions, double simulationTimeSeconds,
-      double observationIntervals) {
-    this.memory = memory;
+  /* Fields responsible for holding the tracked state of the server */
+  private final StringBuilder observations = new StringBuilder();
+  private double timeSinceLastObservation = 0;
+  private final double observationIntervals;
+  private final File observationOutput; // file to output observation csv to
+
+  protected FaaSSimulation(FaaSServer server, List<Function> functions,
+      double simulationTimeSeconds,
+      double observationIntervals, File observationOutput) {
+    this.server = server;
     this.functions = functions;
     this.simulationTimeSeconds = simulationTimeSeconds;
     this.observationIntervals = observationIntervals;
+    this.observationOutput = observationOutput;
+
+    // Define the format of the observations
+    observations.append(
+        "ServerTime,TotalRequests,TotalColdStarts,TotalPromotions,TotalCompletions,TotalRejections\n");
   }
 
-  public Memory getMemory() {
-    return memory;
+  /* Returns the server object */
+  public FaaSServer getServer() {
+    return server;
   }
 
+  /**
+   * Runs the simulation for `simulationTimeSeconds` seconds. Initially, schedules as many functions
+   * into idle memory as possible. Then runs the simulation and optionally saves the output into a
+   * csv
+   */
   public void runSim() {
-    // initialise the memory with a random sample of Functions
-    Collections.shuffle(functions);
-
+    // for each function, trigger an initial burst of requests in some arbitrary order. This order
+    // doesn't matter initially as it is part of the start-up window we don't care about
     for (Function f : functions) {
-      // for each function, trigger an initial burst of requests in some arbitrary order. This order
-      // doesn't matter initially as it is part of the start-up window we don't care about
       schedule(new Request(0, f, this));
     }
+
+    // run simulation
     go();
+
+    // save any observations to the output file (if specified)
+    if (observationOutput != null) {
+      try {
+        Files.writeString(observationOutput.toPath(), observations.toString());
+      } catch (IOException e) {
+        System.err.println("WARNING: " + e);
+      }
+    }
   }
 
   @Override
@@ -55,6 +84,18 @@ public class FaaSSimulation extends Sim {
   @Override
   public void resetMeasures() {
 
+  }
+
+  @Override
+  public void tryRecordMeasure() {
+    // check if we should record the current server state
+    if (time - timeSinceLastObservation > observationIntervals) {
+      // update timeSinceLastObservation
+      timeSinceLastObservation = time;
+
+      // save the current server state
+      observations.append(getCurrentSimulationState());
+    }
   }
 
   public void countEvent() {
@@ -111,6 +152,14 @@ public class FaaSSimulation extends Sim {
         .reduce(0, Integer::sum);
   }
 
+  public double getColdStartRatio() {
+    return (double) getTotalColdStarts() / (double) getTotalRequests();
+  }
+
+  public double getLossRate() {
+    return getTotalRejections() / getSimulationTime();
+  }
+
   public String getFunctionStatistics() {
     StringBuilder sb = new StringBuilder();
     sb.append("FunctionID,Requests,ColdStarts,Promotions,Completions,Rejections\n");
@@ -127,7 +176,7 @@ public class FaaSSimulation extends Sim {
     return sb.toString();
   }
 
-  public String getSystemStatistics() {
+  public String getOverallSystemStatistics() {
     StringBuilder sb = new StringBuilder();
 
     // Print time frame
@@ -150,12 +199,12 @@ public class FaaSSimulation extends Sim {
     return sb.toString();
   }
 
-  public double getColdStartRatio() {
-    return (double) getTotalColdStarts() / (double) getTotalRequests();
+  public String getCurrentSimulationState() {
+    return time + ","
+        + getTotalRequests() + ","
+        + getTotalColdStarts() + ","
+        + getTotalPromotions() + ","
+        + getTotalCompletions() + ","
+        + getTotalRejections() + "\n";
   }
-
-  public double getLossRate() {
-    return getTotalRejections() / getSimulationTime();
-  }
-
 }

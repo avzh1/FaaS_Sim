@@ -1,4 +1,4 @@
-package FunctionAsAService.Memory;
+package FunctionAsAService.Server;
 
 import FunctionAsAService.Function;
 import java.util.HashMap;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Memory class has three partitions of used memory: active, loading and idle.
+ * FaaSServer class has three partitions of used memory: active, loading and idle.
  * <p>
  * As an Assumption, all functions take the same amount of space in memory, we assume that memory
  * will be an integer value denoting the number of Functions we can store. E.g. if each function
@@ -16,7 +16,7 @@ import java.util.Map;
  * function g that is already loaded in memory and has been idle the longest is instantaneously
  * deallocated and its memory space immediately allocated to f.
  */
-public class Memory {
+public class FaaSServer {
 
   private final Map<Integer, Function> active = new HashMap<Integer, Function>();
   private final Map<Integer, Function> loading = new HashMap<Integer, Function>();
@@ -27,15 +27,18 @@ public class Memory {
   /**
    * @param maximumCapacity Maximum capacity of the memory
    */
-  public Memory(int maximumCapacity) {
+  public FaaSServer(int maximumCapacity) {
     this.maximumCapacity = maximumCapacity;
   }
 
   /**
-   * A6: To simplify the simulation you are advised to start the FaaS with the first M function sin
+   * A6: To simplify the simulation you are advised to start the FaaS with the first M functions in
    * memory in the idle state and the remainder in the unloaded (not in memory) state - this means
    * that there will be precisely M functions in memory at all times, so you will not have to model
-   * unused memory that has yet to be loaded/initialised
+   * unused memory that has yet to be loaded/initialised.
+   * <p>
+   * The order of these functions doesn't matter as after the initialisation bias is over the state
+   * won't be dependent of the state it started in.
    */
   public void fillMemory(List<Function> functions) {
     for (Function f : functions) {
@@ -47,7 +50,7 @@ public class Memory {
   }
 
   /**
-   * @return size of the memory
+   * @return current of the memory
    */
   public int size() {
     return active.size() + idle.size() + loading.size();
@@ -93,18 +96,30 @@ public class Memory {
     loading.put(function.getFunctionID(), function);
   }
 
+  /**
+   * @return returns if a given functionID is currently busy/active
+   */
   public boolean isActive(int functionID) {
     return active.containsKey(functionID);
   }
 
+  /**
+   * @return returns if a given functionID is currently idle/inactive
+   */
   public boolean isIdle(int functionID) {
     return idle.containsKey(functionID);
   }
 
+  /**
+   * @return returns if a given functionID is currently loading into memory
+   */
   public boolean isLoading(int functionID) {
     return loading.containsKey(functionID);
   }
 
+  /**
+   * @return returns if a given functionID is not in memory
+   */
   public boolean isUnreserved(int functionID) {
     return !(isActive(functionID) || isLoading(functionID) || isIdle(functionID));
   }
@@ -163,6 +178,10 @@ public class Memory {
 
   }
 
+  /**
+   * @param function returns true iff the function isn't in memory and there is enough space to add
+   *                 it
+   */
   private void canAddToMemory(Function function) {
     if (size() >= maximumCapacity) {
       throw MemoryException.MEMORY_OVERFLOW;
@@ -181,6 +200,10 @@ public class Memory {
     return idle.size() > 0;
   }
 
+  /**
+   * @return the function that has been idle for the longest in memory if there is one. Otherwise
+   * throws a memory exception
+   */
   public Function evict() {
     if (!canEvict()) {
       throw MemoryException.MEMORY_BUSY;
@@ -189,26 +212,15 @@ public class Memory {
     return idle.pop();
   }
 
+  /**
+   * @return string representation of the memory status
+   */
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("SIZE: [").append(size()).append("/").append(maximumCapacity).append("]")
-        .append("\n");
-    sb.append("ACTIVE ==============================").append("\n");
-    for (Function f : active.values()) {
-      sb.append(f).append("\n");
-    }
-    // active.forEach((id, f) -> sb.append(f.getFunctionID()).append("\n"));
-    sb.append("IDLE ================================").append("\n");
-    for (Function f : idle.values()) {
-      sb.append(f).append("\n");
-    }
-    // idle.forEach((id, f) -> sb.append(f.getFunctionID()).append("\n"));
-    sb.append("LOADING =============================").append("\n");
-    for (Function f : loading.values()) {
-      sb.append(f).append("\n");
-    }
-//    loading.forEach((id, f) -> sb.append(f.getFunctionID()).append("\n"));
-    return sb.toString();
+    return "[" + size() + " - " +
+        "(A:" + active.size() +
+        ",I:" + idle.size() +
+        ",L:" + loading.size() + ")/"
+        + maximumCapacity + "]\n";
   }
 }

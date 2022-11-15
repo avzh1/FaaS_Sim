@@ -4,6 +4,10 @@ import FunctionAsAService.Function;
 import Samplers.Sampler;
 import Simulation.FaaSSimulation;
 
+/**
+ * Class more specified to our simulation. Holds the current FaaSSimulation class which deals with
+ * memory and evictions, and also the function the event is handling.
+ */
 public abstract class FaaSEvent extends Event {
 
   // Server state variables
@@ -21,9 +25,7 @@ public abstract class FaaSEvent extends Event {
    */
   public final Promotion coldStart() {
     double coldStart = Sampler.Exponential(FaaSSimulation.coldStart);
-    Promotion event = new Promotion(getInvokeTime() + coldStart, function, simulation);
-    this.setNextEvent(event);
-    return event;
+    return new Promotion(getInvokeTime() + coldStart, function, simulation);
   }
 
   /**
@@ -31,9 +33,7 @@ public abstract class FaaSEvent extends Event {
    */
   public final Request request() {
     double interArrivalTime = Sampler.Exponential(function.getArrivalRate());
-    Request event = new Request(getInvokeTime() + interArrivalTime, function, simulation);
-    this.setNextEvent(event);
-    return event;
+    return new Request(getInvokeTime() + interArrivalTime, function, simulation);
   }
 
   /**
@@ -41,13 +41,11 @@ public abstract class FaaSEvent extends Event {
    */
   public final Completion completion() {
     double completionTime = Sampler.Exponential(1 / function.getAvgServiceTimeSeconds());
-    Completion event = new Completion(getInvokeTime() + completionTime, function, simulation);
-    this.setNextEvent(event);
-    return event;
+    return new Completion(getInvokeTime() + completionTime, function, simulation);
   }
 
   @Override
   public String toString() {
-    return "EVENT [" + getInvokeTime() + "](" + function.getFunctionID() + ")";
+    return "[" + getInvokeTime() + "](" + function.getFunctionID() + ")";
   }
 }

@@ -1,4 +1,4 @@
-package FunctionAsAService.Memory;
+package FunctionAsAService.Server;
 
 public class MemoryException extends RuntimeException {
 

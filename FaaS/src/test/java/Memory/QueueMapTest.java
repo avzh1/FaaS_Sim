@@ -5,8 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import FunctionAsAService.Function;
-import FunctionAsAService.Memory.MemoryException;
-import FunctionAsAService.Memory.QueueMap;
+import FunctionAsAService.Server.MemoryException;
+import FunctionAsAService.Server.QueueMap;
 import org.junit.Test;
 
 public class QueueMapTest {

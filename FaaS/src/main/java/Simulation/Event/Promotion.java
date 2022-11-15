@@ -15,8 +15,13 @@ public class Promotion extends FaaSEvent {
 
   @Override
   public void invoke() {
-    simulation.getMemory().promote(function);
+    simulation.getServer().promote(function);
     this.function.logNewPromotion();
     simulation.schedule(completion());
+  }
+
+  @Override
+  public String toString() {
+    return "PROMOTION: " + super.toString();
   }
 }

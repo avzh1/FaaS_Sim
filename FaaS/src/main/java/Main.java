@@ -13,21 +13,28 @@ public class Main {
 
   private static final int M = 40; // 4000 MB (4GB)
 
-  private static FaaSSimulation sim;
-  private static File traceCSV = new File("trace-final.csv");
-
+  private static final File traceCSV = new File("trace-final.csv");
+  private static final File pathToObservationFile = new File(
+      traceCSV.getAbsoluteFile().getParentFile(),
+      "simulation-observation-results.csv");
 
   public static void main(String[] args) throws IOException {
     // Q1.a
-    FaaSSimulation sim = runStandardSimulation(40);
+    System.out.println("Q1.a");
+//    FaaSSimulation sim = runStandardSimulation(40, 30 * 24 * 60 * 60);
+    FaaSSimulation sim = runTrackedSimulation(40, 30 * 24 * 60 * 60, 60 * 60,
+        pathToObservationFile);
     System.out.println("Cold start ratio: " + sim.getColdStartRatio());
     System.out.println("Loss rate: " + sim.getLossRate());
-    // Q1.b
-    System.out.print("Smallest value of M for a cold start less than 5%: ");
-    System.out.println(binarySearchSmallestM(traceCSV, 0.05));
 
-    // Save Statistics to file
-    saveSimulationStatistics(traceCSV);
+    // Q1.b
+//    System.out.println("Q1.b");
+//    System.out.print("Smallest value of M for a cold start less than 5%: ");
+//    System.out.println(binarySearchSmallestM(0.05));
+//    System.out.println("ColdStart_Ratio: " + sim.getColdStartRatio());
+
+    // Save Statistics from Q1 to file
+    saveSimulationStatistics(sim);
   }
 
   /**
@@ -36,7 +43,7 @@ public class Main {
    * @return the smallest value of M such that the cold start is maximised but stays below the
    * colsStartRatio input
    */
-  private static int binarySearchSmallestM(File path, double desiredGreatestColdStart)
+  private static int binarySearchSmallestM(double desiredGreatestColdStart)
       throws IOException {
     int medianCapacity = 0;
     int low = 0;
@@ -45,7 +52,7 @@ public class Main {
     while (low <= high) {
       medianCapacity = low + ((high - low) / 2);
 
-      FaaSSimulation sim = runStandardSimulation(medianCapacity);
+      FaaSSimulation sim = runStandardSimulation(medianCapacity, 60 * 60 * 24);
 
       double C_ratio = sim.getColdStartRatio();
 //      System.out.println(medianCapacity + ": " + C_ratio);
@@ -67,13 +74,38 @@ public class Main {
   /**
    * Runs a standard simulation given a maximum capacity of the memory of a server
    */
-  private static FaaSSimulation runStandardSimulation(int maximumCapacity) throws IOException {
+  private static FaaSSimulation runStandardSimulation(int maximumCapacity, int simulationTime)
+      throws IOException {
     // Create a new simulation
-    sim = createFaaSSimBuilder()
+    FaaSSimulation sim = createFaaSSimBuilder()
         .withFunctionsFromCSV(traceCSV)
         .withMemoryCapacity(maximumCapacity)
         .withFullIdleMemory() // A6
-        .withSimulationTimeDuration(24 * 60 * 60) // run for 33 days
+        .withSimulationTimeDuration(simulationTime)
+        .createFaaSSimulation();
+
+    // Run the simulation
+    sim.runSim();
+
+    return sim;
+  }
+
+  /**
+   * runs a tracked simulation which, at each `observationInterval` records the current state of the
+   * simulation and finally saves it to some output file `observationOutput`.
+   *
+   * @return
+   */
+  private static FaaSSimulation runTrackedSimulation(int maximumCapacity, int simulationTime,
+      int observationInterval, File observationOutput) throws IOException {
+    // Create a new simulation
+    FaaSSimulation sim = createFaaSSimBuilder()
+        .withFunctionsFromCSV(traceCSV)
+        .withMemoryCapacity(maximumCapacity)
+        .withFullIdleMemory()
+        .withSimulationTimeDuration(simulationTime)
+        .withObservationInterval(observationInterval)
+        .withObservationLogFile(observationOutput)
         .createFaaSSimulation();
 
     // Run the simulation
@@ -86,7 +118,11 @@ public class Main {
     Files.writeString(file.toPath(), content);
   }
 
-  private static void saveSimulationStatistics(File pathToCSV) throws IOException {
+  /**
+   * Does admin work in saving final statistics for each functions of a simulation to a file in the
+   * same directory as the input trace-final.csv
+   */
+  private static void saveSimulationStatistics(FaaSSimulation sim) throws IOException {
     // Collect CSV version (to not overwrite old CSV)
     File version_file = new File("version.txt");
     int CSV_version =
@@ -96,7 +132,7 @@ public class Main {
     String functionStatistics = sim.getFunctionStatistics();
 
     printToFile(version_file, String.valueOf(CSV_version));
-    File pathToFunctionResultsCSV = new File(pathToCSV.getAbsoluteFile().getParentFile(),
+    File pathToFunctionResultsCSV = new File(traceCSV.getAbsoluteFile().getParentFile(),
         "trace-function-results" + CSV_version + ".csv");
     printToFile(pathToFunctionResultsCSV, functionStatistics);
   }

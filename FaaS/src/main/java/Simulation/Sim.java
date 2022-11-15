@@ -37,32 +37,17 @@ public abstract class Sim {
   }
 
   /**
-   * @param event event to deschedule from diary, also deschedules all subsequent triggers this
-   *              event created
-   */
-  public void deschedule(Event event) {
-    // remove the event and try to event next event
-    if (diary.remove(event) && event.getNextEvent() != null) {
-      diary.remove(event.getNextEvent());
-    }
-  }
-
-  /**
    * Function for executing the simulation while the event queue is not empty and a stopping
-   * condition isn't true.
+   * condition isn't true. On each event, try to record the measure as defined by method
+   * tryRecordMeasure which should be overwritten if a user wishes to save the state of the system
+   * at some time interval.
    */
   public void go() {
-//    double previousEventTime = 0;
     while (!diary.isEmpty() && !this.stop()) {
       Event topEvent = diary.poll();
       assert topEvent != null;
-//      if (previousEventTime > topEvent.getInvokeTime()) {
-//        System.err.println("Attempted to schedule something in the past!");
-//      }
-//      previousEventTime = topEvent.getInvokeTime();
-//      System.out.println(topEvent);
-
       time = topEvent.getInvokeTime();
+      tryRecordMeasure();
       if (!this.stop()) {
         topEvent.invoke();
       }
@@ -82,4 +67,7 @@ public abstract class Sim {
   public abstract boolean stop();
 
   public abstract void resetMeasures();
+
+  public void tryRecordMeasure() {
+  }
 }
