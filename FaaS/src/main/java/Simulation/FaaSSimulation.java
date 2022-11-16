@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * My class for completing this simulation task
@@ -24,20 +25,23 @@ public class FaaSSimulation extends Sim {
 
   /* Simulation trackers */
   private final double simulationTimeSeconds;
+  private final double warmUpPeriod;
+  private boolean warmUp = true;
   protected int numEvents = 0;
 
   /* Fields responsible for holding the tracked state of the server */
-  private final StringBuilder observations = new StringBuilder();
+  private StringBuilder observations = new StringBuilder();
   private double timeSinceLastObservation = 0;
   private final double observationIntervals;
   private final File observationOutput; // file to output observation csv to
 
   protected FaaSSimulation(FaaSServer server, List<Function> functions,
-      double simulationTimeSeconds,
-      double observationIntervals, File observationOutput) {
+      double simulationTimeSeconds, double warmUpPeriod, double observationIntervals,
+      File observationOutput) {
     this.server = server;
     this.functions = functions;
     this.simulationTimeSeconds = simulationTimeSeconds;
+    this.warmUpPeriod = warmUpPeriod;
     this.observationIntervals = observationIntervals;
     this.observationOutput = observationOutput;
 
@@ -78,13 +82,18 @@ public class FaaSSimulation extends Sim {
 
   @Override
   public boolean stop() {
-//    return numEvents > 1000000;
     return time > simulationTimeSeconds;
   }
 
   @Override
-  public void resetMeasures() {
-
+  public void tryResetMeasure() {
+    if (warmUp && time > warmUpPeriod) {
+      warmUp = false;
+      // reset all the measures
+      functions.forEach(Function::resetMeasures);
+      observations = new StringBuilder();
+      timeSinceLastObservation = 0;
+    }
   }
 
   @Override
@@ -156,22 +165,63 @@ public class FaaSSimulation extends Sim {
   /**
    * @return returns an array with ret[0] = unbiased cold start, ret[1,2] = 90% confidence bounds
    */
-  public double[] getUnbiasedColdStartRatio() {
+  private double[] calculateUnbiasedColdRatio() {
     List<Double> coldStartRatiosPerFunction = new ArrayList<>(functions.size());
     for (Function f : functions) {
-      coldStartRatiosPerFunction.add((double) f.getColdStarts() / (double) f.getRequests());
+      if (f.getRequests() != 0) { // if the function was never called
+        coldStartRatiosPerFunction.add((double) f.getColdStarts() / (double) f.getRequests());
+      }
     }
 
-    double sampleMean =
-        coldStartRatiosPerFunction.stream().reduce(0.0, Double::sum) / functions.size();
-    System.out.println(sampleMean);
+    return calculateSampleStatistics(coldStartRatiosPerFunction);
+  }
 
-    double sampleVariance = coldStartRatiosPerFunction.stream()
-        .reduce(0.0, (b, v) -> b + Math.pow(sampleMean - v, 2));
-    System.out.println(sampleVariance);
+  /**
+   * @return Pretty print the result from getUnbiasedColdStartRatio
+   */
+  public String getUnbiasedColdStartRatio() {
+    double[] cRatio = calculateUnbiasedColdRatio();
+    return "( " + cRatio[1] + " <= " + cRatio[0] + " <= " + cRatio[2] + " )";
+  }
+
+  /**
+   * @return returns a sample mean of the cold starts. For bounds consider
+   * calculateUnbiasedColdStart
+   */
+  public double getBiasedColdStartRatio() {
+    return (double) getTotalColdStarts() / (double) getTotalRequests();
+  }
+
+  /**
+   * @return returns an array with ret[0] = unbiased loss rate, ret[1,2] = 90% confidence bounds
+   */
+  private double[] calculateUnbiasedLossRate() {
+    List<Double> lossRatePerFunction = new ArrayList<>(functions.size());
+    for (Function f : functions) {
+      if (f.getRequests() != 0) {
+        lossRatePerFunction.add((double) f.getRejections() / getSimulationTime());
+      }
+    }
+
+    return calculateSampleStatistics(lossRatePerFunction);
+  }
+
+  private double @NotNull [] calculateSampleStatistics(List<Double> coldStartRatiosPerFunction) {
+    double total = 0;
+    for (double d : coldStartRatiosPerFunction) {
+      total += d;
+    }
+
+    double sampleMean = total / functions.size();
+
+    double mseTotal = 0;
+    for (double d : coldStartRatiosPerFunction) {
+      mseTotal += Math.pow(sampleMean - d, 2);
+    }
+
+    double sampleVariance = mseTotal / (functions.size() - 1);
 
     double sampleSTD = Math.pow(sampleVariance, 0.5);
-    System.out.println(sampleSTD);
 
     // int degreesOfFreedom = functions.size() - 1;
     // for the sake of the coursework we'll assume that functions size will always be 10861 so deg
@@ -187,21 +237,14 @@ public class FaaSSimulation extends Sim {
   }
 
   /**
-   * @return Pretty print the result from getUnbiasedColdStartRatio
+   * @return returns a sample mean of the loss rate. For bounds consider calculateUnbiasedLossRate
    */
-  public String prettyUnbiasedColdStartRatio() {
-    double[] cratio = getUnbiasedColdStartRatio();
-    return "( " + cratio[1] + " <= " + cratio[0] + " <= " + cratio[1] + " )";
+  public String getUnbiasedLossRate() {
+    double[] lRate = calculateUnbiasedLossRate();
+    return "( " + lRate[1] + " <= " + lRate[0] + " <= " + lRate[2] + " )";
   }
 
-  /**
-   * @return returns a sample mean of the cold starts. For bounds consider getUnbiasedColdStart
-   */
-  public double getBiasedColdStartRatio() {
-    return (double) getTotalColdStarts() / (double) getTotalRequests();
-  }
-
-  public double getLossRate() {
+  public double getBiasedLossRate() {
     return getTotalRejections() / getSimulationTime();
   }
 
@@ -231,9 +274,9 @@ public class FaaSSimulation extends Sim {
         + "---------\n"
 
         // C_ratio: probability that a request incurs a cold start
-        + "C_ratio: " + prettyUnbiasedColdStartRatio() + "\n"
+        + "C_ratio: " + getUnbiasedColdStartRatio() + "\n"
         // L_rate: the rate at which requests are lost
-        + "L_rate: " + getLossRate() + "\n";
+        + "L_rate: " + getUnbiasedLossRate() + "\n";
   }
 
   public String getCurrentSimulationState() {

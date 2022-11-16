@@ -105,4 +105,11 @@ public class Function {
     return "ID: " + getFunctionID();
   }
 
+  public void resetMeasures() {
+    requests = 0;
+    coldStarts = 0;
+    promotions = 0;
+    completions = 0;
+    rejections = 0;
+  }
 }

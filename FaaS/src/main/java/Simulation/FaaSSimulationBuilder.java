@@ -32,6 +32,7 @@ public class FaaSSimulationBuilder {
   private double simulationTimeSeconds = 0.0;
   private File observationOutput = null;
   private double observationIntervals = Integer.MAX_VALUE;
+  private double warmUpPeriod = Integer.MIN_VALUE;
 
   public static FaaSSimulationBuilder createFaaSSimBuilder() {
     return new FaaSSimulationBuilder();
@@ -89,8 +90,8 @@ public class FaaSSimulationBuilder {
   }
 
   public FaaSSimulation createFaaSSimulation() {
-    return new FaaSSimulation(faaSServer, functions, simulationTimeSeconds, observationIntervals,
-        observationOutput);
+    return new FaaSSimulation(faaSServer, functions, simulationTimeSeconds, warmUpPeriod,
+        observationIntervals, observationOutput);
   }
 
   public FaaSSimulationBuilder withFullIdleMemory() {
@@ -106,6 +107,11 @@ public class FaaSSimulationBuilder {
 
   public FaaSSimulationBuilder withObservationLogFile(File observationOutput) {
     this.observationOutput = observationOutput;
+    return this;
+  }
+
+  public FaaSSimulationBuilder withWarmUpPeriod(double warmUpPeriodSeconds) {
+    this.warmUpPeriod = warmUpPeriodSeconds;
     return this;
   }
 }

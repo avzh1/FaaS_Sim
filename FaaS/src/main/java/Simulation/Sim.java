@@ -47,6 +47,7 @@ public abstract class Sim {
       Event topEvent = diary.poll();
       assert topEvent != null;
       time = topEvent.getInvokeTime();
+      tryResetMeasure();
       tryRecordMeasure();
       if (!this.stop()) {
         topEvent.invoke();
@@ -66,7 +67,7 @@ public abstract class Sim {
    */
   public abstract boolean stop();
 
-  public abstract void resetMeasures();
+  public abstract void tryResetMeasure();
 
   public void tryRecordMeasure() {
   }

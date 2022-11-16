@@ -21,19 +21,19 @@ public class Main {
   public static void main(String[] args) throws IOException {
     // Q1.a
     System.out.println("Q1.a");
-    FaaSSimulation sim = runStandardSimulation(40, 60 * 60);
+    FaaSSimulation sim = runStandardSimulation(40, 33 * 24 * 60 * 60, 60);
 //    FaaSSimulation sim = runTrackedSimulation(40, 30 * 24 * 60 * 60, 60 * 60,
 //        pathToObservationFile);
     System.out.println(sim.getOverallSystemStatistics());
 
-    // Q1.b
-    System.out.println("Q1.b");
-    System.out.print("Smallest value of M for a cold start less than 5%: ");
-    System.out.println(binarySearchSmallestM(0.05));
-    System.out.println("ColdStart_Ratio: " + sim.prettyUnbiasedColdStartRatio());
-
     // Save Statistics from Q1 to file
     saveSimulationStatistics(sim);
+
+    // Q1.b
+//    System.out.println("Q1.b");
+//    System.out.print("Smallest value of M for a cold start less than 5%: ");
+//    System.out.println(binarySearchSmallestM(0.05));
+//    System.out.println("ColdStart_Ratio: " + sim.prettyUnbiasedColdStartRatio());
   }
 
   /**
@@ -81,6 +81,23 @@ public class Main {
         .withMemoryCapacity(maximumCapacity)
         .withFullIdleMemory() // A6
         .withSimulationTimeDuration(simulationTime)
+        .createFaaSSimulation();
+
+    // Run the simulation
+    sim.runSim();
+
+    return sim;
+  }
+
+  private static FaaSSimulation runStandardSimulation(int maximumCapacity, int simulationTime,
+      double warmUpTime) throws IOException {
+    // Create a new simulation
+    FaaSSimulation sim = createFaaSSimBuilder()
+        .withFunctionsFromCSV(traceCSV)
+        .withMemoryCapacity(maximumCapacity)
+        .withFullIdleMemory() // A6
+        .withSimulationTimeDuration(simulationTime)
+        .withWarmUpPeriod(warmUpTime)
         .createFaaSSimulation();
 
     // Run the simulation
