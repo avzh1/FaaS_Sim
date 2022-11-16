@@ -6,6 +6,7 @@ import Simulation.Event.Request;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -152,7 +153,51 @@ public class FaaSSimulation extends Sim {
         .reduce(0, Integer::sum);
   }
 
-  public double getColdStartRatio() {
+  /**
+   * @return returns an array with ret[0] = unbiased cold start, ret[1,2] = 90% confidence bounds
+   */
+  public double[] getUnbiasedColdStartRatio() {
+    List<Double> coldStartRatiosPerFunction = new ArrayList<>(functions.size());
+    for (Function f : functions) {
+      coldStartRatiosPerFunction.add((double) f.getColdStarts() / (double) f.getRequests());
+    }
+
+    double sampleMean =
+        coldStartRatiosPerFunction.stream().reduce(0.0, Double::sum) / functions.size();
+    System.out.println(sampleMean);
+
+    double sampleVariance = coldStartRatiosPerFunction.stream()
+        .reduce(0.0, (b, v) -> b + Math.pow(sampleMean - v, 2));
+    System.out.println(sampleVariance);
+
+    double sampleSTD = Math.pow(sampleVariance, 0.5);
+    System.out.println(sampleSTD);
+
+    // int degreesOfFreedom = functions.size() - 1;
+    // for the sake of the coursework we'll assume that functions size will always be 10861 so deg
+    // of freedom is 10860 ~ 10,000. For a constant confidence interval of 90%, we need (1 - 0.90) / 2
+    // so student's table for ~10000 degrees of freedom and 0.05.
+
+    double t_student = 1.960;
+
+    return new double[]{
+        sampleMean,
+        sampleMean - t_student * sampleSTD / Math.sqrt(functions.size()),
+        sampleMean + t_student * sampleSTD / Math.sqrt(functions.size())};
+  }
+
+  /**
+   * @return Pretty print the result from getUnbiasedColdStartRatio
+   */
+  public String prettyUnbiasedColdStartRatio() {
+    double[] cratio = getUnbiasedColdStartRatio();
+    return "( " + cratio[1] + " <= " + cratio[0] + " <= " + cratio[1] + " )";
+  }
+
+  /**
+   * @return returns a sample mean of the cold starts. For bounds consider getUnbiasedColdStart
+   */
+  public double getBiasedColdStartRatio() {
     return (double) getTotalColdStarts() / (double) getTotalRequests();
   }
 
@@ -177,26 +222,18 @@ public class FaaSSimulation extends Sim {
   }
 
   public String getOverallSystemStatistics() {
-    StringBuilder sb = new StringBuilder();
+    return "Simulation Ran for: " + getSimulationTime() + "\n"
+        + "Total Requests: " + getTotalRequests() + "\n"
+        + "Total ColdStarts: " + getTotalColdStarts() + "\n"
+        + "Total Promotions: " + getTotalPromotions() + "\n"
+        + "Total Completions: " + getTotalCompletions() + "\n"
+        + "Total Rejections: " + getTotalRejections() + "\n"
+        + "---------\n"
 
-    // Print time frame
-    sb.append("Simulation Ran for: ").append(getSimulationTime()).append("\n");
-
-    sb.append("Total Requests: ").append(getTotalRequests()).append("\n");
-    sb.append("Total ColdStarts: ").append(getTotalColdStarts()).append("\n");
-    sb.append("Total Promotions: ").append(getTotalPromotions()).append("\n");
-    sb.append("Total Completions: ").append(getTotalCompletions()).append("\n");
-    sb.append("Total Rejections: ").append(getTotalRejections()).append("\n");
-    sb.append("---------\n");
-
-    // C_ratio: probability that a request incurs a cold start
-    double C_ratio = getColdStartRatio();
-    sb.append("C_ratio: ").append(C_ratio).append("\n");
-    // L_rate: the rate at which requests are lost
-    double L_rate = getLossRate();
-    sb.append("L_rate: ").append(L_rate).append("\n");
-
-    return sb.toString();
+        // C_ratio: probability that a request incurs a cold start
+        + "C_ratio: " + prettyUnbiasedColdStartRatio() + "\n"
+        // L_rate: the rate at which requests are lost
+        + "L_rate: " + getLossRate() + "\n";
   }
 
   public String getCurrentSimulationState() {

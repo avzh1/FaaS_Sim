@@ -21,17 +21,16 @@ public class Main {
   public static void main(String[] args) throws IOException {
     // Q1.a
     System.out.println("Q1.a");
-//    FaaSSimulation sim = runStandardSimulation(40, 30 * 24 * 60 * 60);
-    FaaSSimulation sim = runTrackedSimulation(40, 30 * 24 * 60 * 60, 60 * 60,
-        pathToObservationFile);
-    System.out.println("Cold start ratio: " + sim.getColdStartRatio());
-    System.out.println("Loss rate: " + sim.getLossRate());
+    FaaSSimulation sim = runStandardSimulation(40, 60 * 60);
+//    FaaSSimulation sim = runTrackedSimulation(40, 30 * 24 * 60 * 60, 60 * 60,
+//        pathToObservationFile);
+    System.out.println(sim.getOverallSystemStatistics());
 
     // Q1.b
-//    System.out.println("Q1.b");
-//    System.out.print("Smallest value of M for a cold start less than 5%: ");
-//    System.out.println(binarySearchSmallestM(0.05));
-//    System.out.println("ColdStart_Ratio: " + sim.getColdStartRatio());
+    System.out.println("Q1.b");
+    System.out.print("Smallest value of M for a cold start less than 5%: ");
+    System.out.println(binarySearchSmallestM(0.05));
+    System.out.println("ColdStart_Ratio: " + sim.prettyUnbiasedColdStartRatio());
 
     // Save Statistics from Q1 to file
     saveSimulationStatistics(sim);
@@ -54,7 +53,7 @@ public class Main {
 
       FaaSSimulation sim = runStandardSimulation(medianCapacity, 60 * 60 * 24);
 
-      double C_ratio = sim.getColdStartRatio();
+      double C_ratio = sim.getBiasedColdStartRatio();
 //      System.out.println(medianCapacity + ": " + C_ratio);
 
       // Perform binary search to decide which way to expand/decrease memory
