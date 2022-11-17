@@ -24,7 +24,7 @@ public abstract class FaaSEvent extends Event {
    * @return new Promotion event displaced by a sample of coldStart distribution
    */
   public final Promotion coldStart() {
-    double coldStart = Sampler.Exponential(FaaSSimulation.coldStart);
+    double coldStart = Sampler.Exponential(FaaSSimulation.coldStartRate);
     return new Promotion(getInvokeTime() + coldStart, function, simulation);
   }
 
@@ -40,7 +40,7 @@ public abstract class FaaSEvent extends Event {
    * @return new Promotion event displaced by a sample of average processing time for a function
    */
   public final Completion completion() {
-    double completionTime = Sampler.Exponential(1 / function.getAvgServiceTimeSeconds());
+    double completionTime = Sampler.Exponential(function.getServiceRate());
     return new Completion(getInvokeTime() + completionTime, function, simulation);
   }
 

@@ -4,7 +4,7 @@ public class Function {
 
   /* Metadata from CSV */
   private final int functionID; // ID
-  private final double avgServiceTimeSeconds; // seconds / request
+  private final double avgServiceRateSeconds; // requests / second
   private final int invocations30Days; // requests in 30 days
 
   /* Arrival of requests for this function */
@@ -19,9 +19,9 @@ public class Function {
 
   public Function(int functionID, double avgServiceTimeMilliseconds, int invocations30Days) {
     this.functionID = functionID;
-    this.avgServiceTimeSeconds = millisToSeconds(avgServiceTimeMilliseconds);
+    this.avgServiceRateSeconds = 1 / millisToSeconds(avgServiceTimeMilliseconds);
     this.invocations30Days = invocations30Days;
-    arrivalRate = calculateArrivalRate();
+    this.arrivalRate = calculateArrivalRate();
   }
 
   private double millisToSeconds(double avgServiceTimeMilliseconds) {
@@ -44,8 +44,8 @@ public class Function {
     return functionID;
   }
 
-  public double getAvgServiceTimeSeconds() {
-    return avgServiceTimeSeconds;
+  public double getServiceRate() {
+    return avgServiceRateSeconds;
   }
 
   public int getInvocations30Days() {

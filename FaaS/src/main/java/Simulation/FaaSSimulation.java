@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class FaaSSimulation extends Sim {
 
   /* Loading functions suffer an exponentially distributed overhead */
-  public static final double coldStart = 0.5; // 1 / second
+  public static final double coldStartRate = 0.5; // 1 / second
 
   /* Simulation objects */
   private final FaaSServer server;
@@ -173,7 +173,7 @@ public class FaaSSimulation extends Sim {
       }
     }
 
-    return calculateSampleStatistics(coldStartRatiosPerFunction);
+    return calculateSampleStatistics(getBiasedColdStartRatio(), coldStartRatiosPerFunction);
   }
 
   /**
@@ -203,17 +203,11 @@ public class FaaSSimulation extends Sim {
       }
     }
 
-    return calculateSampleStatistics(lossRatePerFunction);
+    return calculateSampleStatistics(getBiasedLossRate(), lossRatePerFunction);
   }
 
-  private double @NotNull [] calculateSampleStatistics(List<Double> coldStartRatiosPerFunction) {
-    double total = 0;
-    for (double d : coldStartRatiosPerFunction) {
-      total += d;
-    }
-
-    double sampleMean = total / functions.size();
-
+  private double @NotNull [] calculateSampleStatistics(double sampleMean,
+      List<Double> coldStartRatiosPerFunction) {
     double mseTotal = 0;
     for (double d : coldStartRatiosPerFunction) {
       mseTotal += Math.pow(sampleMean - d, 2);

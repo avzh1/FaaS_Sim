@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class Sampler {
 
-  private static final Random rand = new Random(); //1234567890);
+  private static final Random rand = new Random(1234567890);
 
   /**
    * Generate a random number based on the exponential distribution. Uses the

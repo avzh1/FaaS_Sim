@@ -26,11 +26,10 @@ public class Request extends FaaSEvent {
   @Override
   public void invoke() {
     simulation.countEvent();
-    FaaSServer memory = simulation.getServer();
-
-    // Bookkeeping
     this.function.logNewRequest();
 
+    FaaSServer memory = simulation.getServer();
+    
     // go through cases as in JavaDoc above
     if (memory.isIdle(function.getFunctionID())) {
       memory.promote(function);

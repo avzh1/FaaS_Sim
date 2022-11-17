@@ -21,7 +21,7 @@ public class Main {
   public static void main(String[] args) throws IOException {
     // Q1.a
     System.out.println("Q1.a");
-    FaaSSimulation sim = runStandardSimulation(40, 33 * 24 * 60 * 60, 60);
+    FaaSSimulation sim = runStandardSimulation(40, 30 * 24 * 60 * 60);
 //    FaaSSimulation sim = runTrackedSimulation(40, 30 * 24 * 60 * 60, 60 * 60,
 //        pathToObservationFile);
     System.out.println(sim.getOverallSystemStatistics());
@@ -51,7 +51,7 @@ public class Main {
     while (low <= high) {
       medianCapacity = low + ((high - low) / 2);
 
-      FaaSSimulation sim = runStandardSimulation(medianCapacity, 60 * 60 * 24);
+      FaaSSimulation sim = runStandardSimulation(medianCapacity, 33 * 60 * 60 * 24);
 
       double C_ratio = sim.getBiasedColdStartRatio();
 //      System.out.println(medianCapacity + ": " + C_ratio);
