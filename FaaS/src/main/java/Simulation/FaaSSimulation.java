@@ -165,7 +165,7 @@ public class FaaSSimulation extends Sim {
   /**
    * @return returns an array with ret[0] = unbiased cold start, ret[1,2] = 90% confidence bounds
    */
-  private double[] calculateUnbiasedColdRatio() {
+  public double[] getColdRatioConfidenceInterval() {
     List<Double> coldStartRatiosPerFunction = new ArrayList<>(functions.size());
     for (Function f : functions) {
       if (f.getRequests() != 0) { // if the function was never called
@@ -177,11 +177,10 @@ public class FaaSSimulation extends Sim {
   }
 
   /**
-   * @return Pretty print the result from getUnbiasedColdStartRatio
+   * @param interval confidence range with lower bound at 0, mean at 1, and upper bound at 2
    */
-  public String getUnbiasedColdStartRatio() {
-    double[] cRatio = calculateUnbiasedColdRatio();
-    return "( " + cRatio[1] + " <= " + cRatio[0] + " <= " + cRatio[2] + " )";
+  public static String confidenceIntervalToString(double[] interval) {
+    return "( " + interval[0] + " <= " + interval[1] + " <= " + interval[2] + " )";
   }
 
   /**
@@ -195,7 +194,7 @@ public class FaaSSimulation extends Sim {
   /**
    * @return returns an array with ret[0] = unbiased loss rate, ret[1,2] = 90% confidence bounds
    */
-  private double[] calculateUnbiasedLossRate() {
+  public double[] getLossConfidenceInterval() {
     List<Double> lossRatePerFunction = new ArrayList<>(functions.size());
     for (Function f : functions) {
       if (f.getRequests() != 0) {
@@ -225,17 +224,9 @@ public class FaaSSimulation extends Sim {
     double t_student = 1.960;
 
     return new double[]{
-        sampleMean,
         sampleMean - t_student * sampleSTD / Math.sqrt(functions.size()),
+        sampleMean,
         sampleMean + t_student * sampleSTD / Math.sqrt(functions.size())};
-  }
-
-  /**
-   * @return returns a sample mean of the loss rate. For bounds consider calculateUnbiasedLossRate
-   */
-  public String getUnbiasedLossRate() {
-    double[] lRate = calculateUnbiasedLossRate();
-    return "( " + lRate[1] + " <= " + lRate[0] + " <= " + lRate[2] + " )";
   }
 
   public double getBiasedLossRate() {
@@ -268,9 +259,13 @@ public class FaaSSimulation extends Sim {
         + "---------\n"
 
         // C_ratio: probability that a request incurs a cold start
-        + "C_ratio: " + getUnbiasedColdStartRatio() + "\n"
+        + "C_ratio: " + confidenceIntervalToString(getColdRatioConfidenceInterval()) + "\n"
         // L_rate: the rate at which requests are lost
-        + "L_rate: " + getUnbiasedLossRate() + "\n";
+        + "L_rate: " + confidenceIntervalToString(getLossConfidenceInterval()) + "\n";
+  }
+
+  public List<Function> getFunctions() {
+    return functions;
   }
 
   public String getCurrentSimulationState() {
